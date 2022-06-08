@@ -1,0 +1,1 @@
+All program output gets written to this directory.

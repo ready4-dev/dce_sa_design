@@ -1,0 +1,66 @@
+---
+title: "XX_Funs"
+output: html_document
+date: '2022-06-08'
+---
+
+```{r echo=TRUE}
+make_block_choice_tbs_ls <- function(block_ind,
+                                     choices_tb){
+  purrr::map(block_ind,
+             ~ dplyr::filter(choices_tb, startsWith(Choice, paste0("set",.x,"."))))
+}
+make_choice_card <- function(choice_card_sng_tb){
+  formatted_tb <- t(choice_card_sng_tb) %>% 
+    tibble::as_tibble(rownames = "Attribute") %>% 
+    dplyr::filter(Attribute != "Choice") %>%
+    dplyr::rename(`Social Anxiety App 1` = V1,
+                  `Social Anxiety App 2` = V2)  
+  row_names <- formatted_tb %>% dplyr::pull(Attribute)
+  formatted_tb <- formatted_tb %>% dplyr::select(-Attribute)
+  formatted_tb <- formatted_tb %>%
+    as.data.frame() 
+  rownames(formatted_tb) <- row_names
+     
+  formatted_tb %>%
+   knitr::kable(escape = F) %>%  
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                              full_width = F, 
+                              position = "left") %>%
+    kableExtra::column_spec(1,bold = T, border_right = T) %>%
+    kableExtra::column_spec(2:3, 
+                            # width = "40em", 
+                            color = "black", border_right = T)
+}
+make_one_block_choice_cards_ls <- function(block_choice_tbs_ls){
+  purrr::map(1:length(block_choice_tbs_ls),
+             ~ make_choice_card(block_choice_tbs_ls %>% purrr::pluck(.x)))
+}
+save_one_block_choice_cards <- function(block_choice_cards_ls,
+                                        save_path_stub,
+                                        output_type = ".png"){
+  
+  purrr::walk2(block_choice_cards_ls,
+               1:length(block_choice_cards_ls),
+               ~ save_choice_card_as(.x,
+                                   .y,
+                                   save_path_stub = save_path_stub,
+                                   output_type = output_type)
+               )
+}
+save_choice_card_as <- function(choice_kab,
+                                choice_nbr,
+                                save_path_stub,
+                                output_type){
+  file_path = paste0(save_path_stub,
+                     "/choice_",
+                     choice_nbr,
+                     output_type)
+  if(output_type==".png"){
+    kableExtra::as_image(choice_kab,
+                         file = file_path)
+  }else{
+    kableExtra::save_kable(choice_kab, file = file_path)
+  }
+}
+```

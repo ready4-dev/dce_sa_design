@@ -1,0 +1,2 @@
+first_nm_chr,middle_nm_chr,last_nm_chr,title_chr,qualifications_chr,institute_chr,sequence_int,is_corresponding_lgl,email_chr,is_equal_first_lgl
+Authors,,Are Suppressed,,,"""Suppressed""",1,TRUE,,FALSE

@@ -1,0 +1,3 @@
+first_nm_chr,middle_nm_chr,last_nm_chr,title_chr,qualifications_chr,institute_chr,sequence_int,is_corresponding_lgl,email_chr,is_equal_first_lgl
+Matthew,Phillip,Hamilton,Mr,"""BBS, MSC""","""Orygen""",1,TRUE,matthew.hamilton@orygen.org.au,TRUE
+Caroline,X,Gao,Dr,"""BEng, MBiostatistics, PhD""","""Orygen, CYMH, Monash""",2,FALSE,caroline.gao@orygen.org.au,TRUE

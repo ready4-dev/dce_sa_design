@@ -1,3 +1,6 @@
+# Program execution data
+Data/Pilot/*
+
 # History files
 .Rhistory
 .Rapp.history

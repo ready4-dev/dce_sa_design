@@ -1,0 +1,24 @@
+\\textbf{Background: }
+Brief background to study goes here.
+\\newline
+\\newline
+\\textbf{Objectives: }
+Brief study objectives goes here.
+\\newline
+\\newline
+\\textbf{Methods: }
+Brief description of methods goes here.
+\\newline
+\\newline
+\\textbf{Results: }
+Brief summary of results goes here.
+\\newline
+\\newline
+\\textbf{Conclusions: }
+Headline conclusions go here.
+\\newline
+\\newline
+\\textbf{Data: }
+Statement about availability of study data and materials goes here.
+\\newline
+\\newline
