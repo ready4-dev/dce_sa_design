@@ -4,7 +4,7 @@ authors:
   - family-names: "Hamilton"
     given-names: "Matthew"
 title: "dce_sa_design: An R Markdown program to create the experimental design for a Discrete Choice Experiment (DCE) exploring online help seeking in socially anxious young people"
-version: 0.0.9.1
+version: 0.0.9.2
 doi: 10.5281/zenodo.6626256
 date-released: 2022-06-08
 url: "https://github.com/ready4-dev/dce_sa_design"
