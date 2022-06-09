@@ -1,0 +1,44 @@
+---
+title: "Share_Pilot"
+output: html_document
+date: '2022-06-09'
+---
+
+
+```{r}
+# utils::install.packages("devtools")
+# devtools::install_github("ready4-dev/ready4")
+# devtools::install_github("ready4-dev/ready4use")
+library(ready4)
+library(ready4use)
+```
+
+# Share work
+The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repositories that we specify below.
+
+```{r eval = FALSE}
+X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", # Replace with values for a dataverse & dataset for which
+                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", #  you have write permissions.
+                    dv_server_1L_chr = "dataverse.harvard.edu")
+Y <- share(X,
+           obj_to_share_xx = no_app_optout_ls,
+           fl_nm_1L_chr = "a_a_pilot_design_ls",
+           description_1L_chr = "Efficient design list object for pilot survey (example output of dce_sa_design program)")
+Y <- share(X,
+           obj_to_share_xx = survey_ls,
+           fl_nm_1L_chr = "a_a_pilot_survey_ls",
+           description_1L_chr = "Survey choices list object for pilot survey (example output of dce_sa_design program)")
+Y <- share(X,
+           obj_to_share_xx = choice_cards_by_block_ls,
+           fl_nm_1L_chr = "a_a_pilot_blocks_ls",
+           description_1L_chr = "Choice card blocks list object for pilot survey (example output of dce_sa_design program)")
+purrr::walk(1:2,
+            ~dataverse::add_dataset_file(paste0("../Data/Pilot/block_",
+                                                .x,
+                                                "pilot.zip"),
+                            dataset = "doi:10.7910/DVN/VGPIPS",
+                            description = paste0("HTML choice cards for pilot survey block ",
+                                                 xfun::numbers_to_words(.x),
+                                                 " (example output of dce_sa_design program)")))
+
+```
