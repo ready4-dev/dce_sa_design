@@ -9,7 +9,7 @@ output:
       - '--lua-filter=../Filters/author-info-blocks.lua'
     toc: no
 date: "`r format(Sys.Date(),'%d %B %Y')`"
-subtitle: Pilot survey analysis sub-routine (reproduction)
+subtitle: Pilot survey analysis sub-routine (replication)
 params:
   eval_1L_lgl: True
   path_to_data_1L_chr: NULL
@@ -46,6 +46,9 @@ If you do not already have the required libraries to run this program installed,
 # utils::install.packages("magrittr")
 # utils::install.packages("purrr")
 # utils::install.packages("stringr")
+# utils::install.packages("devtools")
+# devtools::install_github("ready4-dev/ready4")
+# devtools::install_github("ready4-dev/ready4use")
 ```
 
 Next load the libraries required to run this program.
@@ -74,7 +77,24 @@ If a valid path has been supplied, the pilot survey response dataset can now be 
 responses <- read.csv(path_to_data_1L_chr)
 ```
 
+We can also retrieve details about the design of the pilot survey
+
+```{r}
+X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", 
+                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", 
+                    dv_server_1L_chr = "dataverse.harvard.edu")
+pilot_design_repln_ls <- ingest(X,
+                                fls_to_ingest_chr = "BBB_pilot_design_repln_ls",
+                                metadata_1L_lgl = F)
+
+```
+
 # Analyse data
+We can now produce the analysis of the pilot survey data. Note that the analysis algorithm involves random sampling so a seed must be set to make results reproducible. Also, for some random seeds NULL values will be generated that will prevent the analysis executing in full. Changing the random seed and rerunning the code will address this.
+
+```{r}
+set.seed(1985)
+```
 
 ```{r}
 n_responses <- nrow(responses)
@@ -91,21 +111,24 @@ y <- purrr::map(1:n_responses,
                     ~ switch(.x,c(1,0,0),c(0,1,0),c(0,0,1))) %>% 
                   unlist()) %>%
   unlist()
-blocks_vec <-purrr::map(1:n_responses, 
+blocks_vec <- purrr::map(1:n_responses, 
                         ~ choice_responses %>% 
                           dplyr::slice(.x) %>% 
                           as.numeric()) %>%
   purrr::map_chr(~ ifelse(all(is.na(c(.x)[1:15])),"Block_2","Block_1"))
 des <- purrr::map(blocks_vec,
-                   ~ no_app_optout_ls$design[switch("Block_1","Block_1" = 1:45, "Block_2" = 46:90),]) %>%
+                   ~ pilot_design_repln_ls$pilot_survey_ls$design[switch("Block_1",
+                                                                         "Block_1" = 1:45, 
+                                                                         "Block_2" = 46:90),]) %>%
   stats::setNames(letters[1:7]) %>%
   purrr::reduce(~rbind(.x,.y))
+
 ## Constraints
 low = c(-Inf, -Inf, -Inf, -Inf, -Inf, -Inf, -Inf, -Inf, -Inf, 0.005, 0.006, -Inf)
 up = c(Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, Inf, -0.0499)
 pilot_analysis <- idefix::ImpsampMNL(n.draws = 100, 
-                                     prior.mean = mu, 
-                                     prior.covar = v, 
+                                     prior.mean = pilot_design_repln_ls$mu, 
+                                     prior.covar = pilot_design_repln_ls$v, 
                                      des = des, 
                                      n.alts = 3, 
                                      y = y, 
@@ -113,6 +136,17 @@ pilot_analysis <- idefix::ImpsampMNL(n.draws = 100,
                                      upper = up, 
                                      alt.cte = c(0,0,1))
 ```
+
+# Share work
+The final step is to share our non-confidential work outputs with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.
+
+```{r eval = FALSE}
+Y <- share(X,
+           obj_to_share_xx = pilot_analysis,
+           fl_nm_1L_chr = "BBB_pilot_analysis_repln_ls",
+           description_1L_chr = "List object to help replicate analysis of responses to pilot survey (output of dce_sa_design replication program)")
+```
+
 
 \elandscape
 <!---BLOCK_LANDSCAPE_STOP--->

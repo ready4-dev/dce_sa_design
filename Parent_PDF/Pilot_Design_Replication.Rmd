@@ -50,12 +50,17 @@ If you do not already have the required libraries to run this program installed,
 # utils::install.packages("stringr")
 # utils::install.packages("webshot")
 # utils::install.packages("xfun")
+# utils::install.packages("devtools")
+# devtools::install_github("ready4-dev/ready4")
+# devtools::install_github("ready4-dev/ready4use")
 ```
 
 Next load the libraries required to run this program.
 
 ```{r message=FALSE, warning=FALSE}
 library(magrittr)
+library(ready4)
+library(ready4use)
 ```
 
 # Create custom functions
@@ -190,12 +195,30 @@ choice_cards_pilot_ls <- export_choice_cards(no_app_optout_ls = pilot_survey_ls,
                                              output_dir = output_dir)
 ```
 
-# Preview survey in Shiny App
+# Preview survey
+We can now preview all of our choice cards in an interactive Shiny app.
 
 ```{r}
 preview_survey(no_app_optout_ls = pilot_survey_ls,
                survey_features_ls = survey_features_ls,
                pilot = T)
+```
+
+# Share work
+The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repositories that we specify below.
+
+```{r eval = FALSE}
+X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", # Replace with values for a dataverse & dataset for which
+                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", #  you have write permissions.
+                    dv_server_1L_chr = "dataverse.harvard.edu")
+Y <- share(X,
+           obj_to_share_xx = list(survey_features_ls = survey_features_ls,
+                                  choice_cards_pilot_ls = choice_cards_pilot_ls,
+                                  mu = mu,
+                                  pilot_survey_ls = pilot_survey_ls,
+                                  v = v),
+           fl_nm_1L_chr = "BBB_pilot_design_repln_ls",
+           description_1L_chr = "List object to help replicate pilot survey (output of dce_sa_design replication program)")
 ```
 
 \elandscape
