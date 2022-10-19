@@ -1,0 +1,70 @@
+---
+title: "Prepare Workspace"
+output: html_document
+date: '2022-06-09'
+---
+
+# Prepare workspace
+
+## Install and load required libraries
+If you do not already have the required libraries to run this program installed, you can do so by un-commenting and running the following lines.
+
+```{r }
+# devtools::install_github("ready4-dev/ready4")
+# devtools::install_github("ready4-dev/mychoice") # add lwgeom to imports
+```
+```{r }
+# utils::install.packages("idefix")
+# utils::install.packages("kableExtra")
+# utils::install.packages("knitr")
+# utils::install.packages("magick")
+# utils::install.packages("magrittr")
+# utils::install.packages("shiny")
+# utils::install.packages("stringr")
+# utils::install.packages("webshot")
+# utils::install.packages("xfun")
+# utils::install.packages("devtools")
+# devtools::install_github("ready4-dev/ready4use")
+```
+
+Next we load the libraries required to run this program.
+
+```{r message=FALSE, warning=FALSE}
+library(ready4)
+library(ready4use)
+library(mychoice)
+```
+
+```{r include=FALSE}
+# PROJECT LIST
+## list(dce_design_ls = list(), mdl_params_ls = list(), paths_ls = list(), preprocessing_log_ls = list(),records_ls = list())
+```
+
+## Specify data directories
+
+We begin by specifying where our input data can be located and where we wish to write our outputs to. You must supply these details or the rest of this code will not work. 
+
+```{r eval=is.null(params$X)}
+paths_ls <- list(input_data_dir_1L_chr = "PROVIDE DETAILS HERE",
+                 output_data_dir_1L_chr = "PROVIDE DETAILS HERE",
+                 raw_data_fl_nms_chr = "PROVIDE DETAILS HERE")
+```
+
+```{r echo=FALSE, eval=!is.null(params$X)}
+paths_ls<- params$X$paths_ls
+```
+
+## Reproducibility
+
+We now set a seed to aid reproducibility.
+
+```{r}
+set.seed(1001)
+```
+
+Having set the seed, it is now likely that if you run the syntax described in this document on your own installation of R you will get identical results to those reported in this document. However, if you do not, it may be that you have a different version of R, or of some of the packages that we used to produce this analysis. We therefore save a record of the software that we have on the machine used for this analysis so this can be made available for comparisons.
+
+```{r}
+session_ls <- sessionInfo()
+```
+

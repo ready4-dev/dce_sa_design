@@ -1,0 +1,226 @@
+---
+title: "Replicate Pilot Design"
+output: html_document
+date: '2022-10-19'
+---
+
+```{r child=if(T){"../Child_RMDs/_Set_Up.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Copyright.Rmd"}else{NULL}, eval=TRUE}
+```
+
+\blandscape
+<!---BLOCK_LANDSCAPE_START--->
+
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_About_Repln_Pilot_Des_Code.Rmd"}else{NULL}, eval=TRUE}
+```
+
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
+```
+
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
+```
+
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/XX_Funs.Rmd"}else{NULL}, eval=TRUE}
+```
+
+# Specify survey features and priors
+Our first main step is to define the key features of the survey (attributes, levels, choice cards, blocks) and our prior expectation of the relative importance of attributes and levels.
+
+## Specify choice attributes and levels
+We can now define the attributes and levels for the choices to be included in the survey.
+
+We begin by specifying the following features of our survey:
+
+- the labels used for each choice card alternative; 
+
+- the attributes and levels used to describe each alternative;
+
+- the variable names we will use when converting factor attribute levels to dummy variables (reference levels do not need converting); 
+
+- the short names we will use when plotting factor attribute levels; and 
+
+- whether the survey design includes an opt-out option.
+
+```{r}
+dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "Social Anxiety App B", "Do not use a social anxiety app"),
+     att_lvls_tb = list(c("Outcomes","Information_sharing", "Social","Endorsers", "Cost"),
+                        list(c("Provides knowledge and skills to  manage future situations",
+                               "Addresses current symptoms",
+                               "Addresses current symptoms and provides knowledge and skills to manage future situations"),
+                             c("No information is shared with your treating clinician", 
+                               "Information is shared with your treating clinician in accordance with app policy", 
+                               "Information is shared with your treating clinician based on settings you control"),
+                             c("No discussions with other app users",
+                               "Unmoderated discussions with other app users",
+                               "Discussions with other app users moderated by trained peers", 
+                               "Discussions with other app users moderated by mental health clinicians", 
+                               "Discussions with other app users moderated by both trained peers and mental health clinicians"),
+                             c("App has no endorsers",
+                               "App is endorsed by respected non experts",
+                               "App is endorsed by youth mental health experts"), 
+                             c(0,5,15,30,60)),
+                        list(c(NA_character_,"curr_sym", "curr_sym_future_sit"), 
+                             c(NA_character_,"app_policy","user_settings"),
+                             c(NA_character_,"unmod_disc", "trained_peer_mod", "clinician_mod", "peer_clinician_mod"),
+                             c(NA_character_,"non_expert","expert"),
+                             NA_character_),
+                        list(c("Future","Current", "Both"), 
+                             c("None","App policy","User settings"),
+                             c("None","Unmoderated", "Peer", "Clinician", "Both"),
+                             c("None","Non-expert","Expert"),
+                             "Cost")) %>%
+       purrr::pmap_dfr(~ tibble::tibble(attribute_chr = ..1,
+                                        level_chr = as.character(..2),
+                                        continuous_lgl = is.numeric(..2),
+                                        dummy_nm_chr = ..3,
+                                        distribution_chr = "normal",
+                                        short_nms_chr = ..4)),
+     # nbr_of_sets_1L_int = 30,
+     # nbr_of_blocks_1L_int = 2,
+     opt_out_1L_lgl = T)  
+```
+
+
+```{r}
+
+
+
+```
+
+
+- the total number of choice cards;
+
+- the number of survey blocks;
+
+
+
+## Create candidate choices matrix
+We now create a design matrix of the full factorial of all attribute / level combinations. To do this we create a list specifying the number of attributes for each level and record whether coefficients for each attribute are Continuous ("C" ) or Dummy ("D").
+
+```{r}
+
+# at_lvls <- purrr::map_int(attribute_levels,~length(.x)) %>% 
+#   unname()
+# c_type <- c("D","D","D","D","C")
+con_lvls <- purrr::keep(attribute_levels, is.numeric) %>% 
+  unname()
+candidate_des_mat <- idefix::Profiles(lvls = get_att_smrys(dce_design_ls), 
+                                      coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"), 
+                                      c.lvls = con_lvls)
+```
+
+## Specifiy additional features about our survey
+We now provide additional detail about our intended survey design, specifying the number of alternatives (3 - including opt out), the position of the opt out option (third of three options) and the alternative specific constants (zero for each active option, one for the opt out option), the labels for each alternative and the total number of choice sets (30 - two blocks of 15).
+
+```{r}
+n_alts <- 3
+no_choice_lgl <- TRUE
+no_choice_idx <- 3
+alt_cte <- c(0,0,1)
+alternatives <- c("Social Anxiety App A", "Social Anxiety App B", "Do not use a social anxiety app")
+n_sets <- 30
+n_blocks <- 2
+```
+
+## Specify coefficient priors
+We now specify our prior expectation of the values of coefficients for each attribute and an opt out constant. The coefficients supplied in this section were based on study authors' perception of participant feedback at a number of focus groups.
+
+```{r}
+mu <- c(-0.15, # Opt out constant
+        0.5,1, # Outcomes
+        0.2,0.4, # Information sharing
+        0.1,0.2,0.3,0.4, # Social
+        0.1,0.2,# Endorsers
+        -0.05) # Cost
+v <- diag(length(mu)) ## Prior variance matrix
+```
+
+## Create matrices of parameter value draws
+We now create a matrix comprised of ten draws for each parameter and then split the matrix into two: one for the alternative specific constant, the other for the coefficients.
+
+```{r}
+set.seed(1987)
+pd <- MASS::mvrnorm(n = 10, mu = mu, Sigma = v)
+p.d <- list(matrix(pd[,1], ncol = 1), pd[,2:12])
+```
+
+We can now save a list object with the summary information about our survey.
+
+```{r}
+cost_attr_indx <- 5
+lvl_names <- attribute_levels %>%
+  purrr::discard(is.numeric) %>% 
+  append(list(paste("$",
+                    as.character(attribute_levels[[cost_attr_indx]]),
+                    " per month")) %>%
+           stats::setNames("Cost"))
+survey_features_ls <- list(candidate_des_mat = candidate_des_mat,
+                           lvl_names = lvl_names,
+                           c_type = c_type,
+                           con_lvls = con_lvls,
+                           n_alts = n_alts,
+                           alternatives = alternatives,
+                           no_choice_lgl = no_choice_lgl,
+                           no_choice_idx = no_choice_idx,
+                           alt_cte = alt_cte,
+                           n_sets = n_sets,
+                           n_blocks = n_blocks,
+                           p.d = p.d)
+```
+
+# Create efficient pilot survey design
+We first specify where on our local machine that we want copies of our output to be saved to.
+
+```{r}
+output_dir <- "pilot_survey"
+```
+
+We can now create the initial efficient design to be used in the pilot survey. Note this step can take a long time (about an hour).
+
+```{r}
+pilot_survey_ls <- export_eff_des(survey_features_ls, 
+                                   parallel = FALSE, 
+                                   output_dir = output_dir)
+```
+
+# Create choice cards for each block
+We can now generate HTML choice cards for each block.
+
+```{r warning=FALSE}
+choice_cards_pilot_ls <- export_choice_cards(no_app_optout_ls = pilot_survey_ls, 
+                                             survey_features_ls = survey_features_ls,
+                                             output_dir = output_dir)
+```
+
+# Preview survey
+We can now preview all of our choice cards in an interactive Shiny app.
+
+```{r}
+preview_survey(no_app_optout_ls = pilot_survey_ls,
+               survey_features_ls = survey_features_ls,
+               pilot = T)
+```
+
+# Share work
+The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repositories that we specify below.
+
+```{r eval = FALSE}
+X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", # Replace with values for a dataverse & dataset for which
+                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", #  you have write permissions.
+                    dv_server_1L_chr = "dataverse.harvard.edu")
+Y <- share(X,
+           obj_to_share_xx = list(survey_features_ls = survey_features_ls,
+                                  choice_cards_pilot_ls = choice_cards_pilot_ls,
+                                  mu = mu,
+                                  pilot_survey_ls = pilot_survey_ls,
+                                  v = v),
+           fl_nm_1L_chr = "BBB_pilot_design_repln_ls",
+           description_1L_chr = "List object to help replicate pilot survey (output of dce_sa_design replication program)")
+```
+
+\elandscape
+<!---BLOCK_LANDSCAPE_STOP--->
+
+
+

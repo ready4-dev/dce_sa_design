@@ -1,0 +1,12 @@
+---
+title: "Set Up"
+output: html_document
+date: '2022-10-19'
+---
+
+```{r include=FALSE}
+library(magrittr)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = params$eval_1L_lgl)
+```
+

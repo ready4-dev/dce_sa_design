@@ -1,0 +1,9 @@
+---
+title: "Custom Functions Text"
+output: html_document
+date: "2022-10-10"
+---
+
+# Create custom functions
+
+We now create a number of functions that we will use in subsequent parts of this program.
