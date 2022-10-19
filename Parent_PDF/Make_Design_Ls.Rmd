@@ -1,0 +1,187 @@
+---
+output: 
+  bookdown::pdf_document2:
+    includes:
+      in_header: preamble.tex
+    pandoc_args: 
+      -  "--metadata-file=../Header/header_common.yaml"
+      - '--lua-filter=../Filters/scholarly-metadata.lua'
+      - '--lua-filter=../Filters/author-info-blocks.lua'
+    toc: no
+date: "`r format(Sys.Date(),'%d %B %Y')`"
+subtitle: Specify Survey Design Parameters
+params:
+  eval_1L_lgl: True
+  X: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = params$eval_1L_lgl)
+```
+
+```{r child="../Child_RMDs/Copyright.Rmd", eval=TRUE}
+```
+
+\blandscape
+<!---BLOCK_LANDSCAPE_START--->
+
+# About this code
+
+## Motivation
+This program was used to create the object synopsising the main design features of a DCE we administered to socially anxious young people in 2019.
+
+## Status
+This code is the same version as was used in preparing study data for analysis. The only items that have been modified are those that remove references to the local directory structure on which study data was stored.
+
+## Use
+When using this code it is important to note that some of the steps in this program involve interactivity - they generate a prompt that a user must respond to before proceeding. Therefore, **this code should be run step by step** (i.e run one chunk at a time and do not try to run the program by knitting the R Markdown version of this code).  
+
+# Prepare workspace
+
+## Install and load required libraries
+If you do not already have the required libraries to run this program installed, you can do so by un-commenting and running the following lines.
+
+```{r }
+# devtools::install_github("ready4-dev/ready4")
+# devtools::install_github("ready4-dev/mychoice")
+```
+
+Next we load the libraries required to run this program.
+
+```{r message=FALSE, warning=FALSE}
+library(ready4)
+#library(mychoice)
+```
+
+## Specify data directories
+
+We begin by specifying where our input data can be located and where we wish to write our outputs to. You must supply these details or the rest of this code will not work. 
+
+```{r eval=!is.null(params$X)}
+paths_ls <- list(input_data_dir_1L_chr = "PROVIDE DETAILS HERE",
+                 output_data_dir_1L_chr = "PROVIDE DETAILS HERE")
+```
+
+```{r echo=FALSE, eval=!is.null(params$X)}
+paths_ls <- params$X$paths_ls
+```
+
+## Reproducibility
+
+We now set a seed to aid reproducibility.
+
+```{r}
+set.seed(1001)
+```
+
+# Create custom functions
+
+We now create a number of functions that we will use in subsequent parts of this program.
+
+```{r child="../Child_RMDs/XX_Funs.Rmd", eval=TRUE}
+```
+
+# Create the design list object
+
+We create an empty list object to store our data.
+```{r}
+dce_design_ls <- list()
+```
+
+## Add data on choice sets 
+We specify the following features of our survey:
+
+- the labels used for each choice card alternative; 
+
+- the attributes and levels used to describe each alternative;
+
+- the variable names we will use when converting factor attribute levels to dummy variables (reference levels do not need converting);
+
+- the total number of choice cards;
+
+- the number of survey blocks; and 
+
+- whether the survey design included an opt-out option.
+
+```{r}
+dce_design_ls$choice_sets_ls <- list(alternatives_chr = c("Social Anxiety App A", "Social Anxiety App B", "Do not use a social anxiety app"),
+     att_lvls_tb = list(c("Outcomes","Information_sharing", "Social","Endorsers", "Cost"),
+                        list(c("Provides knowledge and skills to  manage future situations",
+                               "Addresses current symptoms",
+                               "Addresses current symptoms and provides knowledge and skills to manage future situations"),
+                             c("No information is shared with your treating clinician", 
+                               "Information is shared with your treating clinician in accordance with app policy", 
+                               "Information is shared with your treating clinician based on settings you control"),
+                             c("No discussions with other app users",
+                               "Unmoderated discussions with other app users",
+                               "Discussions with other app users moderated by trained peers", 
+                               "Discussions with other app users moderated by mental health clinicians", 
+                               "Discussions with other app users moderated by both trained peers and mental health clinicians"),
+                             c("App has no endorsers",
+                               "App is endorsed by respected non experts",
+                               "App is endorsed by youth mental health experts"), 
+                             c(0,5,15,30,60)),
+                        list(c(NA_character_,"curr_sym", "curr_sym_future_sit"), 
+                             c(NA_character_,"app_policy","user_settings"),
+                             c(NA_character_,"unmod_disc", "trained_peer_mod", "clinician_mod", "peer_clinician_mod"),
+                             c(NA_character_,"non_expert","expert"),
+                             NA_character_),
+                        list(c("Future","Current", "Both"), 
+                             c("None","App policy","User settings"),
+                             c("None","Unmoderated", "Peer", "Clinician", "Both"),
+                             c("None","Non-expert","Expert"),
+                             "Cost")) %>%
+       purrr::pmap_dfr(~ tibble::tibble(attribute_chr = ..1,
+                                        level_chr = as.character(..2),
+                                        continuous_lgl = is.numeric(..2),
+                                        dummy_nm_chr = ..3,
+                                        distribution_chr = "normal",
+                                        short_nms_chr = ..4)),
+     nbr_of_sets_1L_int = 30,
+     nbr_of_blocks_1L_int = 2,
+     opt_out_1L_lgl = T) 
+```
+
+### Ingest design matrix
+We add the design matrix we used to create the survey choice cards.
+
+```{r}
+dce_design_ls$design_mat <- readRDS(file = paste0(paths_ls$output_data_dir_1L_chr,
+                                       "/Archive/Design_Records/no_app_optout_ls.rds"))$design
+```
+
+### Ingest block assignments
+We now add the randomly sampled indices that assigned individual choice sets from the design matrix to each survey block.
+
+```{r}
+# Retrieve from Dataverse
+dce_design_ls$block_indcs_ls = list(as.integer(c(3,5,6,7,8,9,12,14,15,18,19,20,23,24,28)), 
+                                    as.integer(setdiff(1:dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
+                                                       c(3,5,6,7,8,9,12,14,15,18,19,20,23,24,28)))) %>%
+  stats::setNames(paste0(paste0("block_",1:2),"_int"))
+```
+
+# Save work
+We write a new directory (with sub-directories) to which we will save outputs from study analyses. We then save the DCE design list object into one of the newly created sub-directories.
+
+```{r eval=is.null(params$X)}
+paths_ls <- write_choice_mdlng_ws(paths_ls)
+write_obj_with_prompt(dce_design_ls,
+                      obj_nm_1L_chr = "dce_design_ls",
+                      outp_dir_1L_chr = paths_ls$Replication) 
+```
+```{r echo=FALSE, eval=!is.null(params$X), results='hide', message=FALSE, warning=FALSE}
+# It is only recommended to supply an argument to consent_1L_chr when knitting the RMD file.
+# Not supplying a conent_1L_chr argument will ensure user is prompted for their active consent to write specific files and directories.
+paths_ls <- write_choice_mdlng_ws(paths_ls,
+                                  consent_1L_chr = "Y")
+write_obj_with_prompt(dce_design_ls,
+                      obj_nm_1L_chr = "dce_design_ls",
+                      outp_dir_1L_chr = paths_ls$Replication,
+                      consent_1L_chr = "Y") 
+```
+
+\elandscape
+<!---BLOCK_LANDSCAPE_STOP--->
+
