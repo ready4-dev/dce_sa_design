@@ -38,9 +38,11 @@ We begin by specifying the following features of our survey:
 
 - the variable names we will use when converting factor attribute levels to dummy variables (reference levels do not need converting); 
 
-- the short names we will use when plotting factor attribute levels; and 
+- the short names we will use when plotting factor attribute levels; 
 
-- whether the survey design includes an opt-out option.
+- which of the alternatives is a cost attribute, its currency and frequency of payment; and 
+
+- which of the alternatives is an opt-out (no -choice) option.
 
 ```{r}
 dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "Social Anxiety App B", "Do not use a social anxiety app"),
@@ -76,101 +78,71 @@ dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "S
                                         dummy_nm_chr = ..3,
                                         distribution_chr = "normal",
                                         short_nms_chr = ..4)),
+     cost_att_idx_1L_int = 5L,
+     cost_pfx_1L_chr = "$",
+     cost_sfx_1L_chr = " per month",
      # nbr_of_sets_1L_int = 30,
      # nbr_of_blocks_1L_int = 2,
-     opt_out_1L_lgl = T)  
+     opt_out_idx_1L_int = 3L)  
 ```
-
-
-```{r}
-
-
-
-```
-
-
-- the total number of choice cards;
-
-- the number of survey blocks;
-
 
 
 ## Create candidate choices matrix
 We now create a design matrix of the full factorial of all attribute / level combinations. To do this we create a list specifying the number of attributes for each level and record whether coefficients for each attribute are Continuous ("C" ) or Dummy ("D").
 
 ```{r}
-
-# at_lvls <- purrr::map_int(attribute_levels,~length(.x)) %>% 
-#   unname()
-# c_type <- c("D","D","D","D","C")
-con_lvls <- purrr::keep(attribute_levels, is.numeric) %>% 
-  unname()
-candidate_des_mat <- idefix::Profiles(lvls = get_att_smrys(dce_design_ls), 
-                                      coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"), 
-                                      c.lvls = con_lvls)
+dce_design_ls <- add_design_spec(dce_design_ls,
+                                 add_cndt_design_mat = T)
 ```
 
 ## Specifiy additional features about our survey
-We now provide additional detail about our intended survey design, specifying the number of alternatives (3 - including opt out), the position of the opt out option (third of three options) and the alternative specific constants (zero for each active option, one for the opt out option), the labels for each alternative and the total number of choice sets (30 - two blocks of 15).
+We now provide additional detail about our intended survey design, specifying:
+
+- the total number of choice cards;
+- the number of survey blocks;
 
 ```{r}
-n_alts <- 3
-no_choice_lgl <- TRUE
-no_choice_idx <- 3
-alt_cte <- c(0,0,1)
-alternatives <- c("Social Anxiety App A", "Social Anxiety App B", "Do not use a social anxiety app")
-n_sets <- 30
-n_blocks <- 2
+dce_design_ls <- add_design_spec(dce_design_ls,
+                                 nbr_of_sets_1L_int = 30,
+                                 nbr_of_blocks_1L_int = 2)
 ```
 
-## Specify coefficient priors
-We now specify our prior expectation of the values of coefficients for each attribute and an opt out constant. The coefficients supplied in this section were based on study authors' perception of participant feedback at a number of focus groups.
+## Create matrices of parameter value draws based on prior expectations
+We now specify our prior expectation of the values of coefficients for each attribute and an opt out constant. The coefficients supplied in this section were based on study authors' perception of participant feedback at a number of focus groups. We request that 10 values for each parameter be generated and supply a seed value for reproducibility. As this design includes an opt-out alternative, the following command will create two matrices of parameter values: one for the alternative specific constant, the other for the coefficients.
 
 ```{r}
-mu <- c(-0.15, # Opt out constant
-        0.5,1, # Outcomes
-        0.2,0.4, # Information sharing
-        0.1,0.2,0.3,0.4, # Social
-        0.1,0.2,# Endorsers
-        -0.05) # Cost
-v <- diag(length(mu)) ## Prior variance matrix
+dce_design_ls <- add_design_spec(dce_design_ls,
+                                 draws_1L_int = 10L,  
+                                 priors_dbl = c(-0.15, # Opt out constant
+                                                0.5,1, # Outcomes
+                                                0.2,0.4, # Information sharing
+                                                0.1,0.2,0.3,0.4, # Social
+                                                0.1,0.2,# Endorsers
+                                                -0.05),
+                                 seed_1L_int = 1987L) # Cost
 ```
 
-## Create matrices of parameter value draws
-We now create a matrix comprised of ten draws for each parameter and then split the matrix into two: one for the alternative specific constant, the other for the coefficients.
-
-```{r}
-set.seed(1987)
-pd <- MASS::mvrnorm(n = 10, mu = mu, Sigma = v)
-p.d <- list(matrix(pd[,1], ncol = 1), pd[,2:12])
-```
 
 We can now save a list object with the summary information about our survey.
 
 ```{r}
-cost_attr_indx <- 5
-lvl_names <- attribute_levels %>%
-  purrr::discard(is.numeric) %>% 
-  append(list(paste("$",
-                    as.character(attribute_levels[[cost_attr_indx]]),
-                    " per month")) %>%
-           stats::setNames("Cost"))
-survey_features_ls <- list(candidate_des_mat = candidate_des_mat,
-                           lvl_names = lvl_names,
-                           c_type = c_type,
-                           con_lvls = con_lvls,
-                           n_alts = n_alts,
-                           alternatives = alternatives,
-                           no_choice_lgl = no_choice_lgl,
-                           no_choice_idx = no_choice_idx,
-                           alt_cte = alt_cte,
-                           n_sets = n_sets,
-                           n_blocks = n_blocks,
-                           p.d = p.d)
+# survey_features_ls <- list(candidate_des_mat = dce_design_ls$cndt_design_mat,
+#                            lvl_names = make_tfd_lvls_ls(dce_design_ls),
+#                            c_type = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+#                            con_lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% unname() %>% purrr::map(~as.numeric(.x)),
+#                            n_alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
+#                            alternatives = dce_design_ls$choice_sets_ls$alternatives_chr,
+#                            no_choice_lgl = dce_design_ls$choice_sets_ls$opt_out_1L_lgl,
+#                            no_choice_idx = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int,
+#                            alt_cte = dce_design_ls$priors_ls$Set_1$altv_con_int,
+#                            n_sets = dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
+#                            n_blocks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
+#                            p.d = dce_design_ls$priors_ls$Set_1$params_xx)
 ```
 
 # Create efficient pilot survey design
 We first specify where on our local machine that we want copies of our output to be saved to.
+
 
 ```{r}
 output_dir <- "pilot_survey"
@@ -179,18 +151,86 @@ output_dir <- "pilot_survey"
 We can now create the initial efficient design to be used in the pilot survey. Note this step can take a long time (about an hour).
 
 ```{r}
-pilot_survey_ls <- export_eff_des(survey_features_ls, 
-                                   parallel = FALSE, 
-                                   output_dir = output_dir)
+dce_design_ls <- add_design_spec(dce_design_ls,
+                                 priors_idx_1L_int = 1L)
+
+# pilot_survey_ls <- export_eff_des(survey_features_ls, 
+#                                    parallel = FALSE, 
+#                                    output_dir = output_dir)
 ```
 
 # Create choice cards for each block
 We can now generate HTML choice cards for each block.
 
+```{r}
+make_choice_cards <- function(dce_design_ls,
+                              block_idcs_1L_int = integer(0),
+                              seed_1L_int = 1987,
+                              set_idx_1L_int = 1L,
+                              transform_att_nms_1L_lgl = T){
+  set.seed(seed_1L_int)
+  survey_ls <- idefix::Decode(des = dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design,
+                              lvl.names = make_tfd_lvls_ls(dce_design_ls),
+                              coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+                              c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% 
+                                unname() %>% 
+                                purrr::map(~as.numeric(.x)),
+                              alt.cte = dce_design_ls$priors_ls[[set_idx_1L_int]]$altv_con_int,
+                              n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
+                              no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int)
+  # saveRDS(survey_ls,paste0(output_dir, # Future dev: add prompt before writing to file
+  #                          "/survey_ls.rds"))
+  attributes_chr <- dce_design_ls$choice_sets_ls$att_lvls_tb$attribute_chr %>% unique()
+  if(transform_att_nms_1L_lgl){
+    attributes_chr <- stringr::str_replace_all(attributes_chr,"_"," ")
+  }
+  choices_tb <- tibble::as_tibble(survey_ls$design, 
+                                  rownames = "Choice") 
+  colnames(choices_tb) <- c("Choice", attributes_chr)
+   choices_tb <- choices_tb %>%
+    dplyr::filter(!startsWith(Choice, "no"))
+  # saveRDS(choices_tb,paste0(output_dir, # Future dev: add prompt before writing to file
+  #                           "/choices_tb.rds")) 
+  # Needs generalising
+   if(!identical(block_idcs_1L_int, integer(0))){
+    block_indcs_ls <- dce_design_ls$block_indcs_ls[[1]]
+   }else{
+     indices_int <- 1:survey_features_ls$n_sets
+     folds_int <- cut(indices_int,
+                      breaks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
+                      labels = FALSE) %>% sample()
+     block_idcs_ls <- 1:dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int %>%
+       purrr::map(~indices_int[folds_int==.x])
+     
+   }
+  choice_cards_tb_ls <- purrr::map(block_idcs_ls,
+                                        ~ make_choice_cards_tb_ls(.x,choices_tb))
+  choice_cards_html_ls <- purrr::map(choice_cards_tb_ls,
+                                         ~ make_cards_html_ls(.x))
+  # purrr::walk2(choice_cards_by_block_ls,
+  #              paste0(output_dir,"/block_",c(1:length(choice_cards_by_block_ls))),
+  #              ~ save_one_block_choice_cards(.x, # Future dev: add prompt before writing to file
+  #                                            .y,
+  #                                            output_type = ".html"))
+  choice_cards_ls <- list(survey_ls = survey_ls,
+                          choices_tb = choices_tb,
+                          choice_cards_tb_ls = choice_cards_tb_ls,
+                          choice_cards_html_ls = choice_cards_html_ls)
+  return(choice_cards_ls)
+  
+}
+```
+
+```{r}
+choice_cards_ls <- make_choice_cards(dce_design_ls,
+                                     set_idx_1L_int = 1L,
+                                     transform_att_nms_1L_lgl = T)
+```
+
 ```{r warning=FALSE}
-choice_cards_pilot_ls <- export_choice_cards(no_app_optout_ls = pilot_survey_ls, 
-                                             survey_features_ls = survey_features_ls,
-                                             output_dir = output_dir)
+# choice_cards_pilot_ls <- export_choice_cards(no_app_optout_ls = pilot_survey_ls, 
+#                                              survey_features_ls = survey_features_ls,
+#                                              output_dir = output_dir)
 ```
 
 # Preview survey

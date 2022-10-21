@@ -6,26 +6,43 @@ date: '2022-06-08'
 
 ```{r echo=TRUE}
 add_design_spec <- function(dce_design_ls = list(),
+                            add_cndt_design_mat = F,
                             alternatives_chr = character(0),
                             att_lvls_tb = tibble::tibble(),
                             block_indcs_ls = list(),
-                            design_mat = matrix(),
-                            nbr_of_sets_1L_int = integer(0),
+                            cost_att_idx_1L_int = integer(0),
+                            cost_pfx_1L_chr = "",
+                            cost_sfx_1L_chr = "",
+                            design_mat = matrix(numeric(0)),
+                            draws_1L_int = 10L,
                             nbr_of_blocks_1L_int = integer(0),
-                            opt_out_1L_lgl = logical(0)){
-  if(!identical(block_indcs_ls, list())){
-        if(identical(nbr_of_blocks_1L_int, integer(0))){
-      nbr_of_blocks_1L_int <- length(block_indcs_ls)
-    }else{
-      assertthat::are_equal(length(block_indcs_ls), nbr_of_blocks_1L_int)
+                            nbr_of_sets_1L_int = integer(0),
+                            opt_out_idx_1L_int = integer(0),
+                            parallel_1L_lgl = FALSE, 
+                            pilot_analysis_ls = NULL,
+                            priors_dbl = numeric(0),
+                            priors_idx_1L_int = integer(0),
+                            seed_1L_int = 1987,
+                            start_dsn_mat = NULL
+                            ){
+    if(is.null(dce_design_ls$block_indcs_ls) | !identical(block_indcs_ls, list())){
+      dce_design_ls$block_indcs_ls <- block_indcs_ls
     }
-  }
+  if(!identical(dce_design_ls$block_indcs_ls, list())){
+    if(identical(nbr_of_blocks_1L_int, integer(0))){
+      nbr_of_blocks_1L_int <- length(dce_design_ls$block_indcs_ls)
+      }else{
+        assertthat::are_equal(length(dce_design_ls$block_indcs_ls), nbr_of_blocks_1L_int)
+      }
+    }
   if(is.null(dce_design_ls$choice_sets_ls)){
         dce_design_ls$choice_sets_ls <- list(alternatives_chr = alternatives_chr,
                                              att_lvls_tb = att_lvls_tb,
-                                             nbr_of_sets_1L_int = nbr_of_sets_1L_int,
+                                             # cndt_design_mat = matrix(numeric(0)),
                                              nbr_of_blocks_1L_int = nbr_of_blocks_1L_int,
-                                             opt_out_1L_lgl = opt_out_1L_lgl)
+                                             nbr_of_sets_1L_int = nbr_of_sets_1L_int,
+                                             opt_out_1L_lgl = logical(0),
+                                             opt_out_idx_1L_int = integer(0))
   }
   if(!identical(alternatives_chr,character(0))){
     dce_design_ls$choice_sets_ls$alternatives_chr <- alternatives_chr
@@ -36,7 +53,7 @@ add_design_spec <- function(dce_design_ls = list(),
   if(!identical(block_indcs_ls, list())){
     dce_design_ls$block_indcs_ls <- block_indcs_ls
   }
-  if(!identical(design_mat, matrix())){
+  if(!identical(design_mat, matrix(numeric(0)))){
     dce_design_ls$design_mat <- design_mat
   }
   if(!identical(nbr_of_sets_1L_int, integer(0))){
@@ -45,8 +62,58 @@ add_design_spec <- function(dce_design_ls = list(),
   if(!identical(nbr_of_blocks_1L_int, integer(0))){
     dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int <- nbr_of_blocks_1L_int
   }
-  if(!identical(opt_out_1L_lgl,logical(0))){
-    dce_design_ls$choice_sets_ls$opt_out_1L_lgl <- opt_out_1L_lgl
+  if(!identical(opt_out_idx_1L_int,integer(0))){
+    dce_design_ls$choice_sets_ls$opt_out_idx_1L_int <- opt_out_idx_1L_int ###
+  }
+  if(!identical(opt_out_idx_1L_int,integer(0))){
+    dce_design_ls$choice_sets_ls$opt_out_1L_lgl <- ifelse(is.na(dce_design_ls$choice_sets_ls$opt_out_idx_1L_int),
+                                                          F,
+                                                          T)
+  }
+  if(add_cndt_design_mat){
+    dce_design_ls$cndt_design_mat <- idefix::Profiles(lvls = get_att_smrys(dce_design_ls), 
+                                                      coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"), 
+                                                      c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% unname() %>% purrr::map(~as.numeric(.x))) 
+  }else{
+    if(is.null(dce_design_ls$cndt_design_mat)){
+      dce_design_ls$cndt_design_mat <- matrix(numeric(0))
+    }
+  }
+  if(is.null(dce_design_ls$cost_att_idx_1L_int) | !identical(cost_att_idx_1L_int, integer(0))){
+    dce_design_ls$cost_att_idx_1L_int <- cost_att_idx_1L_int
+  }
+  if(is.null(dce_design_ls$cost_pfx_1L_chr) | !identical(cost_pfx_1L_chr, "")){
+    dce_design_ls$cost_pfx_1L_chr <- cost_pfx_1L_chr
+  }
+  if(is.null(dce_design_ls$cost_sfx_1L_chr) | !identical(cost_sfx_1L_chr, "")){
+    dce_design_ls$cost_sfx_1L_chr <- cost_sfx_1L_chr
+  }
+  if(is.null(dce_design_ls$design_mat) | !identical(design_mat,matrix(numeric(0)))){
+    dce_design_ls$design_mat <- design_mat
+  }
+  if(is.null(dce_design_ls$efnt_dsn_ls)){
+    dce_design_ls$efnt_dsn_ls <- list()
+    }
+  if(is.null(dce_design_ls$priors_ls)){
+    dce_design_ls$priors_ls <- list()
+  }
+  if(!identical(priors_dbl, numeric(0))){
+    dce_design_ls$priors_ls <- append(dce_design_ls$priors_ls,
+                                      list(make_priors_ls(dce_design_ls, 
+                                                          priors_dbl = priors_dbl,
+                                                          draws_1L_int = draws_1L_int,  seed_1L_int = seed_1L_int)) %>%
+                                        stats::setNames(paste0("Set_",
+                                                               length(dce_design_ls$priors_ls) + 1)))
+  }
+  if(!identical(priors_idx_1L_int, integer(0))){
+        dce_design_ls$efnt_dsn_ls<- append(dce_design_ls$efnt_dsn_ls,
+                                      list(make_efnt_dsn_mat(dce_design_ls,
+                                                             parallel_1L_lgl = parallel_1L_lgl,
+                                                             pilot_analysis_ls = pilot_analysis_ls,
+                                                             priors_idx_1L_int = priors_idx_1L_int,
+                                                             start_dsn_mat = start_dsn_mat)) %>%
+                                        stats::setNames(paste0("Set_",
+                                                               length(dce_design_ls$efnt_dsn_ls) + 1)))
   }
   return(dce_design_ls)
 }
@@ -65,6 +132,100 @@ get_att_smrys <- function(dce_design_ls,
       if(return_1L_chr == "type")
      return_xx <- return_xx %>% purrr::flatten_chr()
    return(return_xx)
+}
+```
+```{r}
+get_lvls <- function(att_lvls_tb, return_1L_chr = "all"){
+  atts_chr <- get_atts(att_lvls_tb, return_1L_chr = return_1L_chr) 
+  lvls_ls <- atts_chr %>%
+    purrr::map(~att_lvls_tb %>% dplyr::filter(attribute_chr == .x) %>% dplyr::pull(level_chr)) %>%
+    stats::setNames(atts_chr)
+  return(lvls_ls)
+}
+```
+```{r}
+make_efnt_dsn_mat <- function(dce_design_ls,
+                              parallel_1L_lgl = FALSE, 
+                              pilot_analysis_ls = NULL,
+                              priors_idx_1L_int = 1L,
+                              start_dsn_mat = NULL){
+  efnt_dsn_mat <- idefix::Modfed(cand.set = dce_design_ls$cndt_design_mat, 
+                                     n.sets =dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int, 
+                                     n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr), 
+                                     no.choice = dce_design_ls$choice_sets_ls$opt_out_1L_lgl,
+                                     alt.cte = dce_design_ls$priors_ls[[1]]$altv_con_int, 
+                                     parallel = parallel_1L_lgl, 
+                                     par.draws = {if(is.null(pilot_analysis_ls)){dce_design_ls$priors_ls[[1]]$params_xx}else{pilot_analysis_ls$sample}},
+                                     start.des = start_dsn_mat)
+  return(efnt_dsn_mat)
+}
+```
+```{r}
+make_priors_ls <- function(dce_design_ls,
+                                priors_dbl,
+                                draws_1L_int = 10L,
+                                seed_1L_int = 1987){
+  set.seed(seed_1L_int)
+  variance_mat <- diag(length(priors_dbl)) 
+  params_mat <- MASS::mvrnorm(n = draws_1L_int, mu = priors_dbl, Sigma = variance_mat)
+  altv_con_int <- rep(0,length(dce_design_ls$choice_sets_ls$alternatives_chr))
+  if(dce_design_ls$choice_sets_ls$opt_out_1L_lgl){
+    params_xx <- list(matrix(params_mat[,1], ncol = 1), params_mat[,2:12])
+    altv_con_int[dce_design_ls$choice_sets_ls$opt_out_idx_1L_int] <- 1
+    }else{
+      params_xx <- params_mat
+    }
+  priors_ls <- list(altv_con_int = altv_con_int,
+                         params_xx = params_xx,
+                         priors_dbl = priors_dbl)
+  return(priors_ls)
+  }
+```
+```{r}
+make_choice_cards_tb_ls <- function(blocks_int,
+                                     choices_tb){
+  block_choice_tbs_ls <- purrr::map(blocks_int,
+                                    ~ dplyr::filter(choices_tb, startsWith(Choice, paste0("set",.x,"."))))
+  return(block_choice_tbs_ls)
+}
+```
+```{r}
+make_choice_card_html <- function(choice_card_tb){
+  formatted_tb <- t(choice_card_tb) %>% 
+    tibble::as_tibble(rownames = "Attribute") %>% 
+    dplyr::filter(Attribute != "Choice") %>%
+    dplyr::rename(`Social Anxiety App 1` = V1,
+                  `Social Anxiety App 2` = V2)  
+  row_names <- formatted_tb %>% dplyr::pull(Attribute)
+  formatted_tb <- formatted_tb %>% dplyr::select(-Attribute)
+  formatted_tb <- formatted_tb %>%
+    as.data.frame() 
+  rownames(formatted_tb) <- row_names
+  card_kbl <- formatted_tb %>%
+    knitr::kable(escape = F) %>%  
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width = F, position = "left") %>%
+    kableExtra::column_spec(1,bold = T, border_right = T) %>%
+    kableExtra::column_spec(2:3, 
+                            color = "black", border_right = T)
+  return(card_kbl)
+}
+```
+
+
+```{r}
+make_cards_html_ls <- function(block_choice_tbs_ls){
+  purrr::map(1:length(block_choice_tbs_ls),
+             ~ make_choice_card_html(block_choice_tbs_ls %>% purrr::pluck(.x)))
+}
+```
+
+```{r}
+make_tfd_lvls_ls <- function(dce_design_ls){
+  lvls_ls <- get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb)
+  lvls_ls[dce_design_ls$cost_att_idx_1L_int] <- list(lvls_ls[[dce_design_ls$cost_att_idx_1L_int]] %>%
+    purrr::map_chr(~paste0(dce_design_ls$cost_pfx_1L_chr,.x,dce_design_ls$cost_sfx_1L_chr))) %>%
+           stats::setNames(get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb)[cost_att_idx_1L_int] %>% names())
+  return(lvls_ls)
 }
 ```
 
