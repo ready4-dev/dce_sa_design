@@ -9,7 +9,8 @@ add_design_spec <- function(dce_design_ls = list(),
                             add_cndt_design_mat = F,
                             alternatives_chr = character(0),
                             att_lvls_tb = tibble::tibble(),
-                            block_indcs_ls = list(),
+                            #block_idcs_1L_int = integer(0),
+                            block_idxs_ls = list(),
                             cost_att_idx_1L_int = integer(0),
                             cost_pfx_1L_chr = "",
                             cost_sfx_1L_chr = "",
@@ -23,18 +24,23 @@ add_design_spec <- function(dce_design_ls = list(),
                             priors_dbl = numeric(0),
                             priors_idx_1L_int = integer(0),
                             seed_1L_int = 1987,
-                            start_dsn_mat = NULL
+                            set_idx_1L_int = integer(0),
+                            start_dsn_mat = NULL,
+                            transform_att_nms_1L_lgl = T
                             ){
-    if(is.null(dce_design_ls$block_indcs_ls) | !identical(block_indcs_ls, list())){
-      dce_design_ls$block_indcs_ls <- block_indcs_ls
-    }
-  if(!identical(dce_design_ls$block_indcs_ls, list())){
-    if(identical(nbr_of_blocks_1L_int, integer(0))){
-      nbr_of_blocks_1L_int <- length(dce_design_ls$block_indcs_ls)
-      }else{
-        assertthat::are_equal(length(dce_design_ls$block_indcs_ls), nbr_of_blocks_1L_int)
-      }
-    }
+    # if(is.null(dce_design_ls$block_idxs_ls) | !identical(block_idxs_ls, list())){
+  #     dce_design_ls$block_idxs_ls <- block_idxs_ls_ls
+  #   }
+  # if(!identical(dce_design_ls$block_idxs_ls_ls, list())){
+  #   if(identical(nbr_of_blocks_1L_int, integer(0))){
+  #     nbr_of_blocks_1L_int <- length(dce_design_ls$block_idxs_ls_ls)
+  #     }else{
+  #       assertthat::are_equal(length(dce_design_ls$block_idxs_ls_ls), nbr_of_blocks_1L_int)
+  #     }
+  # }
+  if(is.null(dce_design_ls$choice_cards_ls)){
+    dce_design_ls$choice_cards_ls <- list()
+  }
   if(is.null(dce_design_ls$choice_sets_ls)){
         dce_design_ls$choice_sets_ls <- list(alternatives_chr = alternatives_chr,
                                              att_lvls_tb = att_lvls_tb,
@@ -50,9 +56,9 @@ add_design_spec <- function(dce_design_ls = list(),
   if(!identical(att_lvls_tb, tibble::tibble())){
     dce_design_ls$choice_sets_ls$att_lvls_tb <- att_lvls_tb
   }
-  if(!identical(block_indcs_ls, list())){
-    dce_design_ls$block_indcs_ls <- block_indcs_ls
-  }
+  # if(!identical(block_idxs_ls_ls, list())){
+  #   dce_design_ls$block_idxs_ls_ls <- block_idxs_ls_ls
+  # }
   if(!identical(design_mat, matrix(numeric(0)))){
     dce_design_ls$design_mat <- design_mat
   }
@@ -106,14 +112,24 @@ add_design_spec <- function(dce_design_ls = list(),
                                                                length(dce_design_ls$priors_ls) + 1)))
   }
   if(!identical(priors_idx_1L_int, integer(0))){
-        dce_design_ls$efnt_dsn_ls<- append(dce_design_ls$efnt_dsn_ls,
+        dce_design_ls$efnt_dsn_ls <- append(dce_design_ls$efnt_dsn_ls,
                                       list(make_efnt_dsn_mat(dce_design_ls,
                                                              parallel_1L_lgl = parallel_1L_lgl,
                                                              pilot_analysis_ls = pilot_analysis_ls,
                                                              priors_idx_1L_int = priors_idx_1L_int,
                                                              start_dsn_mat = start_dsn_mat)) %>%
-                                        stats::setNames(paste0("Set_",
-                                                               length(dce_design_ls$efnt_dsn_ls) + 1)))
+                                        stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
+  }
+  if(!identical(set_idx_1L_int, integer(0))){
+    dce_design_ls$choice_cards_ls <- append(dce_design_ls$choice_cards_ls,
+                                            list(make_choice_cards(dce_design_ls,
+                                                                   block_idxs_ls = block_idxs_ls,
+                                                                   #block_idcs_1L_int = block_idcs_1L_int,
+                                                                   seed_1L_int = seed_1L_int,
+                                                                   set_idx_1L_int = set_idx_1L_int,
+                                                                   transform_att_nms_1L_lgl = transform_att_nms_1L_lgl)) %>%
+                                              stats::setNames(paste0("Set_", length(dce_design_ls$choice_cards_ls) + 1)))
+    
   }
   return(dce_design_ls)
 }
@@ -143,6 +159,97 @@ get_lvls <- function(att_lvls_tb, return_1L_chr = "all"){
   return(lvls_ls)
 }
 ```
+```{r}
+launch_preview_survey <- function(dce_design_ls,
+                                  block_1L_int = integer(0),
+                                  button_txt_1L_chr = character(0),
+                                  end_txt_1L_chr = character(0),
+                                  intro_text_1L_chr = character(0),
+                                  set_idx_1L_int = 1L,
+                                  transform_att_nms_1L_lgl = T){
+  atts_chr <- get_atts(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "all")
+  if(transform_att_nms_1L_lgl)
+    atts_chr <- atts_chr %>% stringr::str_replace_all("_"," ")
+  des_mat <- dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design
+    if(!identical(block_1L_int, integer(0))){
+    intro_sfx_1L_chr <- paste0("(Choice cards from  block ", block_1L_int,")")
+    indcs_int <- dce_design_ls$choice_cards_ls[[set_idx_1L_int]]$block_idxs_ls[[block_1L_int]]
+    des_mat <- des_mat[cut(1:nrow(des_mat),
+                           dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int, labels=F) %in% indcs_int ,]
+    total_1L_int <- dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int / dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int
+  }else{
+    intro_sfx_1L_chr <- "(All choice cards from all blocks)"
+    total_1L_int <- dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int
+  }
+  if(identical(intro_text_1L_chr, character(0)))
+    intro_text_1L_chr <- paste0("Survey Preview ",intro_sfx_1L_chr)
+  if(identical(button_txt_1L_chr, character(0)))
+    button_txt_1L_chr = "Please choose the alternative you prefer"
+  if(identical(end_txt_1L_chr, character(0)))
+    end_txt_1L_chr <- "Thanks for taking the survey"
+  idefix::SurveyApp(des = des_mat,
+                     n.total = total_1L_int,
+                     alts = dce_design_ls$choice_sets_ls$alternatives_chr,
+                     atts = atts_chr,
+                     lvl.names = make_tfd_lvls_ls(dce_design_ls) %>% unname(),
+                     c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% unname() %>% purrr::map(~as.numeric(.x)),
+                     coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+                     buttons.text = button_txt_1L_chr,
+                     intro.text = intro_text_1L_chr,
+                     end.text = end_txt_1L_chr,
+                     no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int,
+                     alt.cte = dce_design_ls$priors_ls[[set_idx_1L_int]]$altv_con_int)
+  
+}
+```
+
+```{r}
+make_choice_cards <- function(dce_design_ls,
+                              block_idxs_ls = list(),
+                              seed_1L_int = 1987,
+                              set_idx_1L_int = 1L,
+                              transform_att_nms_1L_lgl = T){
+  set.seed(seed_1L_int)
+  survey_ls <- idefix::Decode(des = dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design,
+                              lvl.names = make_tfd_lvls_ls(dce_design_ls),
+                              coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+                              c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% 
+                                unname() %>% 
+                                purrr::map(~as.numeric(.x)),
+                              alt.cte = dce_design_ls$priors_ls[[set_idx_1L_int]]$altv_con_int,
+                              n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
+                              no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int)
+  attributes_chr <- dce_design_ls$choice_sets_ls$att_lvls_tb$attribute_chr %>% unique()
+  if(transform_att_nms_1L_lgl){
+    attributes_chr <- stringr::str_replace_all(attributes_chr,"_"," ")
+  }
+  choices_tb <- tibble::as_tibble(survey_ls$design, 
+                                  rownames = "Choice") 
+  colnames(choices_tb) <- c("Choice", attributes_chr)
+   choices_tb <- choices_tb %>%
+    dplyr::filter(!startsWith(Choice, "no"))
+   if(identical(block_idxs_ls,list())){
+     indices_int <- 1:dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int
+     folds_int <- cut(indices_int,
+                      breaks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
+                      labels = FALSE) %>% sample()
+     block_idxs_ls <- 1:dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int %>%
+       purrr::map(~indices_int[folds_int==.x])
+   }
+  choice_cards_tb_ls <- purrr::map(block_idxs_ls,
+                                        ~ make_choice_cards_tb_ls(.x,choices_tb))
+  choice_cards_html_ls <- purrr::map(choice_cards_tb_ls,
+                                         ~ make_cards_html_ls(.x))
+  choice_cards_ls <- list(survey_ls = survey_ls,
+                          block_idxs_ls = block_idxs_ls,
+                          choices_tb = choices_tb,
+                          choice_cards_tb_ls = choice_cards_tb_ls,
+                          choice_cards_html_ls = choice_cards_html_ls)
+  return(choice_cards_ls)
+  
+}
+```
+
 ```{r}
 make_efnt_dsn_mat <- function(dce_design_ls,
                               parallel_1L_lgl = FALSE, 
@@ -224,7 +331,7 @@ make_tfd_lvls_ls <- function(dce_design_ls){
   lvls_ls <- get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb)
   lvls_ls[dce_design_ls$cost_att_idx_1L_int] <- list(lvls_ls[[dce_design_ls$cost_att_idx_1L_int]] %>%
     purrr::map_chr(~paste0(dce_design_ls$cost_pfx_1L_chr,.x,dce_design_ls$cost_sfx_1L_chr))) %>%
-           stats::setNames(get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb)[cost_att_idx_1L_int] %>% names())
+           stats::setNames(get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb)[dce_design_ls$cost_att_idx_1L_int] %>% names())
   return(lvls_ls)
 }
 ```

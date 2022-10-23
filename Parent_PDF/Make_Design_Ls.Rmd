@@ -156,7 +156,7 @@ We now add the randomly sampled indices that assigned individual choice sets fro
 
 ```{r}
 # Retrieve from Dataverse
-dce_design_ls$block_indcs_ls = list(as.integer(c(3,5,6,7,8,9,12,14,15,18,19,20,23,24,28)), 
+dce_design_ls$block_idxs_ls_ls = list(as.integer(c(3,5,6,7,8,9,12,14,15,18,19,20,23,24,28)), 
                                     as.integer(setdiff(1:dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
                                                        c(3,5,6,7,8,9,12,14,15,18,19,20,23,24,28)))) %>%
   stats::setNames(paste0(paste0("block_",1:2),"_int"))

@@ -98,8 +98,8 @@ dce_design_ls <- add_design_spec(dce_design_ls,
 ## Specifiy additional features about our survey
 We now provide additional detail about our intended survey design, specifying:
 
-- the total number of choice cards;
-- the number of survey blocks;
+- the total number of choice cards; and
+- the number of survey blocks.
 
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,
@@ -122,124 +122,34 @@ dce_design_ls <- add_design_spec(dce_design_ls,
                                  seed_1L_int = 1987L) # Cost
 ```
 
-
-We can now save a list object with the summary information about our survey.
-
-```{r}
-# survey_features_ls <- list(candidate_des_mat = dce_design_ls$cndt_design_mat,
-#                            lvl_names = make_tfd_lvls_ls(dce_design_ls),
-#                            c_type = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
-#                            con_lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% unname() %>% purrr::map(~as.numeric(.x)),
-#                            n_alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
-#                            alternatives = dce_design_ls$choice_sets_ls$alternatives_chr,
-#                            no_choice_lgl = dce_design_ls$choice_sets_ls$opt_out_1L_lgl,
-#                            no_choice_idx = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int,
-#                            alt_cte = dce_design_ls$priors_ls$Set_1$altv_con_int,
-#                            n_sets = dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
-#                            n_blocks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
-#                            p.d = dce_design_ls$priors_ls$Set_1$params_xx)
-```
-
 # Create efficient pilot survey design
-We first specify where on our local machine that we want copies of our output to be saved to.
-
-
-```{r}
-output_dir <- "pilot_survey"
-```
 
 We can now create the initial efficient design to be used in the pilot survey. Note this step can take a long time (about an hour).
 
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,
                                  priors_idx_1L_int = 1L)
-
-# pilot_survey_ls <- export_eff_des(survey_features_ls, 
-#                                    parallel = FALSE, 
-#                                    output_dir = output_dir)
 ```
 
 # Create choice cards for each block
 We can now generate HTML choice cards for each block.
 
-```{r}
-make_choice_cards <- function(dce_design_ls,
-                              block_idcs_1L_int = integer(0),
-                              seed_1L_int = 1987,
-                              set_idx_1L_int = 1L,
-                              transform_att_nms_1L_lgl = T){
-  set.seed(seed_1L_int)
-  survey_ls <- idefix::Decode(des = dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design,
-                              lvl.names = make_tfd_lvls_ls(dce_design_ls),
-                              coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
-                              c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% 
-                                unname() %>% 
-                                purrr::map(~as.numeric(.x)),
-                              alt.cte = dce_design_ls$priors_ls[[set_idx_1L_int]]$altv_con_int,
-                              n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
-                              no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int)
-  # saveRDS(survey_ls,paste0(output_dir, # Future dev: add prompt before writing to file
-  #                          "/survey_ls.rds"))
-  attributes_chr <- dce_design_ls$choice_sets_ls$att_lvls_tb$attribute_chr %>% unique()
-  if(transform_att_nms_1L_lgl){
-    attributes_chr <- stringr::str_replace_all(attributes_chr,"_"," ")
-  }
-  choices_tb <- tibble::as_tibble(survey_ls$design, 
-                                  rownames = "Choice") 
-  colnames(choices_tb) <- c("Choice", attributes_chr)
-   choices_tb <- choices_tb %>%
-    dplyr::filter(!startsWith(Choice, "no"))
-  # saveRDS(choices_tb,paste0(output_dir, # Future dev: add prompt before writing to file
-  #                           "/choices_tb.rds")) 
-  # Needs generalising
-   if(!identical(block_idcs_1L_int, integer(0))){
-    block_indcs_ls <- dce_design_ls$block_indcs_ls[[1]]
-   }else{
-     indices_int <- 1:survey_features_ls$n_sets
-     folds_int <- cut(indices_int,
-                      breaks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
-                      labels = FALSE) %>% sample()
-     block_idcs_ls <- 1:dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int %>%
-       purrr::map(~indices_int[folds_int==.x])
-     
-   }
-  choice_cards_tb_ls <- purrr::map(block_idcs_ls,
-                                        ~ make_choice_cards_tb_ls(.x,choices_tb))
-  choice_cards_html_ls <- purrr::map(choice_cards_tb_ls,
-                                         ~ make_cards_html_ls(.x))
-  # purrr::walk2(choice_cards_by_block_ls,
-  #              paste0(output_dir,"/block_",c(1:length(choice_cards_by_block_ls))),
-  #              ~ save_one_block_choice_cards(.x, # Future dev: add prompt before writing to file
-  #                                            .y,
-  #                                            output_type = ".html"))
-  choice_cards_ls <- list(survey_ls = survey_ls,
-                          choices_tb = choices_tb,
-                          choice_cards_tb_ls = choice_cards_tb_ls,
-                          choice_cards_html_ls = choice_cards_html_ls)
-  return(choice_cards_ls)
-  
-}
-```
-
-```{r}
-choice_cards_ls <- make_choice_cards(dce_design_ls,
-                                     set_idx_1L_int = 1L,
-                                     transform_att_nms_1L_lgl = T)
-```
-
 ```{r warning=FALSE}
-# choice_cards_pilot_ls <- export_choice_cards(no_app_optout_ls = pilot_survey_ls, 
-#                                              survey_features_ls = survey_features_ls,
-#                                              output_dir = output_dir)
+dce_design_ls <- add_design_spec(dce_design_ls,
+                                 set_idx_1L_int = 1L,
+                                 transform_att_nms_1L_lgl = T)
 ```
+
 
 # Preview survey
 We can now preview all of our choice cards in an interactive Shiny app.
 
-```{r}
-preview_survey(no_app_optout_ls = pilot_survey_ls,
-               survey_features_ls = survey_features_ls,
-               pilot = T)
+```{r eval=FALSE}
+launch_preview_survey(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 1L)
+```
+
+```{r eval=FALSE}
+launch_preview_survey(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 2L)
 ```
 
 # Share work
@@ -250,12 +160,8 @@ X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", # Replace with values for a d
                     dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", #  you have write permissions.
                     dv_server_1L_chr = "dataverse.harvard.edu")
 Y <- share(X,
-           obj_to_share_xx = list(survey_features_ls = survey_features_ls,
-                                  choice_cards_pilot_ls = choice_cards_pilot_ls,
-                                  mu = mu,
-                                  pilot_survey_ls = pilot_survey_ls,
-                                  v = v),
-           fl_nm_1L_chr = "BBB_pilot_design_repln_ls",
+           obj_to_share_xx = dce_design_ls,
+           fl_nm_1L_chr = "CCC_pilot_dce_design_ls",
            description_1L_chr = "List object to help replicate pilot survey (output of dce_sa_design replication program)")
 ```
 
