@@ -86,7 +86,6 @@ dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "S
      opt_out_idx_1L_int = 3L)  
 ```
 
-
 ## Create candidate choices matrix
 We now create a design matrix of the full factorial of all attribute / level combinations. To do this we create a list specifying the number of attributes for each level and record whether coefficients for each attribute are Continuous ("C" ) or Dummy ("D").
 
@@ -127,8 +126,13 @@ dce_design_ls <- add_design_spec(dce_design_ls,
 We can now create the initial efficient design to be used in the pilot survey. Note this step can take a long time (about an hour).
 
 ```{r}
-dce_design_ls <- add_design_spec(dce_design_ls,
-                                 priors_idx_1L_int = 1L)
+if(reproduce_1L_lgl){
+  dce_design_ls$efnt_dsn_ls <- append(dce_design_ls$efnt_dsn_ls,
+                                    list(ingest(X, fls_to_ingest_chr = c("AAA_pilot_design_ls"), metadata_1L_lgl = F) %>% purrr::pluck("pilot_design_ls")) %>%
+                                          stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
+  }else{
+    dce_design_ls <- add_design_spec(dce_design_ls,  priors_idx_1L_int = 1L)
+}
 ```
 
 # Create choice cards for each block
@@ -145,24 +149,22 @@ dce_design_ls <- add_design_spec(dce_design_ls,
 We can now preview all of our choice cards in an interactive Shiny app.
 
 ```{r eval=FALSE}
-launch_preview_survey(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 1L)
+launch_survey_preview(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 1L)
 ```
 
 ```{r eval=FALSE}
-launch_preview_survey(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 2L)
+launch_survey_preview(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 2L)
 ```
 
 # Share work
-The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repositories that we specify below.
+The final step is to share our work with others in an online repository. Note, you will need to have previously supplied yvalues for `X` that correspond to a repository for which you have write persmissions to run this part of the code successfully.
 
 ```{r eval = FALSE}
-X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", # Replace with values for a dataverse & dataset for which
-                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", #  you have write permissions.
-                    dv_server_1L_chr = "dataverse.harvard.edu")
 Y <- share(X,
            obj_to_share_xx = dce_design_ls,
-           fl_nm_1L_chr = "CCC_pilot_dce_design_ls",
-           description_1L_chr = "List object to help replicate pilot survey (output of dce_sa_design replication program)")
+           fl_nm_1L_chr = ifelse(reproduce_1L_lgl,"DDD_pilot_dce_design_ls","CCC_pilot_dce_design_ls"),
+           description_1L_chr = paste0("List object to help replicate pilot survey (output of dce_sa_design ",
+                                       ifelse(reproduce_1L_lgl,"reproduction","replication")," program)"))
 ```
 
 \elandscape

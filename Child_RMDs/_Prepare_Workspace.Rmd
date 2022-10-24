@@ -40,9 +40,20 @@ library(mychoice)
 ## list(dce_design_ls = list(), mdl_params_ls = list(), paths_ls = list(), preprocessing_log_ls = list(),records_ls = list())
 ```
 
+## Specify whether program is a reproduction or replication
+We begin by declaring whether this program is to be executed in order to reproduce the design of the original study or to replicate that study (which will produce a survey design with similar but different features). If choosing a replication, change the below setting to `F`.
+
+```{r}
+reproduce_1L_lgl <- T
+```
+
+```{r echo=FALSE, eval=!is.null(params$X)}
+reproduce_1L_lgl <- params$X$reproduce_1L_lgl
+```
+
 ## Specify data directories
 
-We begin by specifying where our input data can be located and where we wish to write our outputs to. You must supply these details or the rest of this code will not work. 
+We next specify where our input data can be located and where we wish to write our outputs to. You must supply these details or the rest of this code will not work. 
 
 ```{r eval=is.null(params$X)}
 paths_ls <- list(input_data_dir_1L_chr = "PROVIDE DETAILS HERE",
@@ -52,6 +63,14 @@ paths_ls <- list(input_data_dir_1L_chr = "PROVIDE DETAILS HERE",
 
 ```{r echo=FALSE, eval=!is.null(params$X)}
 paths_ls<- params$X$paths_ls
+```
+
+We also specify the online data repository. Note, if you do not have write permissions to the below repository any subsequent command to "share" outputs will not execute correctly. 
+
+```{r}
+X <- Ready4useRepos(dv_nm_1L_chr = "springtolife", 
+                    dv_ds_nm_1L_chr = "https://doi.org/10.7910/DVN/VGPIPS", 
+                    dv_server_1L_chr = "dataverse.harvard.edu")
 ```
 
 ## Reproducibility
