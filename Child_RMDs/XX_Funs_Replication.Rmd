@@ -214,7 +214,7 @@ add_design_spec <- function(dce_design_ls = list(),
 
   }
   if(!is.null(pilot_ds_tb)){
-    dce_design_ls$priors_ls <- append(dce_design_ls$choice_cards_ls,
+    dce_design_ls$pilot_analysis_ls <- append(dce_design_ls$choice_cards_ls,
                                       list(make_pilot_analysis_ls(pilot_ds_tb,
                                                                   dce_design_ls = dce_design_ls,
                                                                   constraints_ls = constraints_ls,
