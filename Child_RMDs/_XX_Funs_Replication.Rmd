@@ -4,6 +4,49 @@ output: html_document
 date: '2022-06-08'
 ---
 
+```{r}
+launch_survey_preview <- function(dce_design_ls,
+                                  block_1L_int = integer(0),
+                                  button_txt_1L_chr = character(0),
+                                  end_txt_1L_chr = character(0),
+                                  intro_text_1L_chr = character(0),
+                                  set_idx_1L_int = 1L,
+                                  transform_att_nms_1L_lgl = T){
+  atts_chr <- get_atts(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "all")
+  if(transform_att_nms_1L_lgl)
+    atts_chr <- atts_chr %>% stringr::str_replace_all("_"," ")
+  des_mat <- dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design
+  if(!identical(block_1L_int, integer(0))){
+    intro_sfx_1L_chr <- paste0("(Choice cards from  block ", block_1L_int,")")
+    indcs_int <- dce_design_ls$choice_cards_ls[[set_idx_1L_int]]$block_idxs_ls[[block_1L_int]]
+    des_mat <- des_mat[cut(1:nrow(des_mat),
+                           dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int, labels=F) %in% indcs_int ,]
+    total_1L_int <- dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int / dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int
+  }else{
+    intro_sfx_1L_chr <- "(All choice cards from all blocks)"
+    total_1L_int <- dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int
+  }
+  if(identical(intro_text_1L_chr, character(0)))
+    intro_text_1L_chr <- paste0("Survey Preview ",intro_sfx_1L_chr)
+  if(identical(button_txt_1L_chr, character(0)))
+    button_txt_1L_chr = "Please choose the alternative you prefer"
+  if(identical(end_txt_1L_chr, character(0)))
+    end_txt_1L_chr <- "Thanks for taking the survey"
+  idefix::SurveyApp(des = des_mat,
+                    n.total = total_1L_int,
+                    alts = dce_design_ls$choice_sets_ls$alternatives_chr,
+                    atts = atts_chr,
+                    lvl.names = make_tfd_lvls_ls(dce_design_ls) %>% unname(),
+                    c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>% unname() %>% purrr::map(~as.numeric(.x)),
+                    coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+                    buttons.text = button_txt_1L_chr,
+                    intro.text = intro_text_1L_chr,
+                    end.text = end_txt_1L_chr,
+                    no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int,
+                    alt.cte = dce_design_ls$priors_ls[[min(set_idx_1L_int,length(dce_design_ls$priors_ls))]]$altv_con_int)
+
+}
+```
 
 
 ```{r}
@@ -53,7 +96,50 @@ make_pilot_analysis_ls <- function(pilot_ds_tb,
 }
 ```
 ```{r echo=TRUE}
+make_choice_cards <- function(dce_design_ls,
+                              block_idxs_ls = list(),
+                              seed_1L_int = 1987,
+                              set_idx_1L_int = 1L,
+                              transform_att_nms_1L_lgl = T){
+  set.seed(seed_1L_int)
+  survey_ls <- idefix::Decode(des = dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design,
+                              lvl.names = make_tfd_lvls_ls(dce_design_ls),
+                              coding = get_att_smrys(dce_design_ls,return_1L_chr = "type"),
+                              c.lvls = get_lvls(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "cont") %>%
+                                unname() %>%
+                                purrr::map(~as.numeric(.x)),
+                              alt.cte = dce_design_ls$priors_ls[[min(set_idx_1L_int,length(dce_design_ls$priors_ls))]]$altv_con_int,
+                              n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
+                              no.choice = dce_design_ls$choice_sets_ls$opt_out_idx_1L_int)
+  attributes_chr <- dce_design_ls$choice_sets_ls$att_lvls_tb$attribute_chr %>% unique()
+  if(transform_att_nms_1L_lgl){
+    attributes_chr <- stringr::str_replace_all(attributes_chr,"_"," ")
+  }
+  choices_tb <- tibble::as_tibble(survey_ls$design,
+                                  rownames = "Choice")
+  colnames(choices_tb) <- c("Choice", attributes_chr)
+  choices_tb <- choices_tb %>%
+    dplyr::filter(!startsWith(Choice, "no"))
+  if(identical(block_idxs_ls,list())){
+    indices_int <- 1:dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int
+    folds_int <- cut(indices_int,
+                     breaks = dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int,
+                     labels = FALSE) %>% sample()
+    block_idxs_ls <- 1:dce_design_ls$choice_sets_ls$nbr_of_blocks_1L_int %>%
+      purrr::map(~indices_int[folds_int==.x])
+  }
+  choice_cards_tb_ls <- purrr::map(block_idxs_ls,
+                                   ~ make_choice_cards_tb_ls(.x,choices_tb))
+  choice_cards_html_ls <- purrr::map(choice_cards_tb_ls,
+                                     ~ make_cards_html_ls(.x))
+  choice_cards_ls <- list(survey_ls = survey_ls,
+                          block_idxs_ls = block_idxs_ls,
+                          choices_tb = choices_tb,
+                          choice_cards_tb_ls = choice_cards_tb_ls,
+                          choice_cards_html_ls = choice_cards_html_ls)
+  return(choice_cards_ls)
 
+}
 ```
 ```{r echo=FALSE}
 make_choice_int <- function(ds_tb,
@@ -83,15 +169,16 @@ make_efnt_dsn_mat <- function(dce_design_ls,
                               parallel_1L_lgl = FALSE,
                               pilot_analysis_ls = list(),
                               priors_idx_1L_int = 1L,
-                              start_dsn_mat = NULL){
+                              set_idx_1L_int = 1L,
+                              start_dsn_mat_ls = NULL){
   efnt_dsn_mat <- idefix::Modfed(cand.set = dce_design_ls$cndt_design_mat,
-                                 n.sets =dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
+                                 n.sets = dce_design_ls$choice_sets_ls$nbr_of_sets_1L_int,
                                  n.alts = length(dce_design_ls$choice_sets_ls$alternatives_chr),
                                  no.choice = dce_design_ls$choice_sets_ls$opt_out_1L_lgl,
-                                 alt.cte = dce_design_ls$priors_ls[[1]]$altv_con_int,
+                                 alt.cte = dce_design_ls$priors_ls[[priors_idx_1L_int]]$altv_con_int,
                                  parallel = parallel_1L_lgl,
-                                 par.draws = {if(identical(pilot_analysis_ls,list())){dce_design_ls$priors_ls[[1]]$params_xx}else{pilot_analysis_ls$sample}},
-                                 start.des = start_dsn_mat)
+                                 par.draws = {if(identical(pilot_analysis_ls,list())){dce_design_ls$priors_ls[[priors_idx_1L_int]]$params_xx}else{pilot_analysis_ls[[set_idx_1L_int]]$sample}},
+                                 start.des = start_dsn_mat_ls)
   return(efnt_dsn_mat)
 }
 ```
@@ -120,7 +207,7 @@ add_design_spec <- function(dce_design_ls = list(),
                             priors_idx_1L_int = integer(0),
                             seed_1L_int = 1987,
                             set_idx_1L_int = integer(0),
-                            start_dsn_mat = NULL,
+                            #start_dsn_mat = NULL,
                             transform_att_nms_1L_lgl = T){
   if(is.null(dce_design_ls$choice_cards_ls)){
     dce_design_ls$choice_cards_ls <- list()
@@ -195,12 +282,20 @@ add_design_spec <- function(dce_design_ls = list(),
                                                                length(dce_design_ls$priors_ls) + 1)))
   }
   if(!identical(priors_idx_1L_int, integer(0))){
+    if(identical(dce_design_ls$pilot_analysis_ls,list())){
+      start_dsn_mat_ls <- NULL
+    }else{
+      start_dsn_mat_ls <- list(dce_design_ls$efnt_dsn_ls[[set_idx_1L_int]]$design)
+    }
     dce_design_ls$efnt_dsn_ls <- append(dce_design_ls$efnt_dsn_ls,
                                         list(make_efnt_dsn_mat(dce_design_ls,
                                                                parallel_1L_lgl = parallel_1L_lgl,
-                                                               pilot_analysis_ls = dce_design_ls$pilot_analysis_ls, # UPDATE
+                                                               pilot_analysis_ls = {if(identical(dce_design_ls$pilot_analysis_ls,list())){
+                                                                 NULL
+                                                                 }else{dce_design_ls$pilot_analysis_ls}},
                                                                priors_idx_1L_int = priors_idx_1L_int,
-                                                               start_dsn_mat = start_dsn_mat)) %>%
+                                                               set_idx_1L_int = set_idx_1L_int,
+                                                               start_dsn_mat_ls = start_dsn_mat_ls)) %>%
                                           stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
   }
   if(!identical(set_idx_1L_int, integer(0))){
@@ -214,7 +309,7 @@ add_design_spec <- function(dce_design_ls = list(),
 
   }
   if(!is.null(pilot_ds_tb)){
-    dce_design_ls$pilot_analysis_ls <- append(dce_design_ls$choice_cards_ls,
+    dce_design_ls$pilot_analysis_ls <- append(dce_design_ls$pilot_analysis_ls,
                                       list(make_pilot_analysis_ls(pilot_ds_tb,
                                                                   dce_design_ls = dce_design_ls,
                                                                   constraints_ls = constraints_ls,
@@ -222,7 +317,7 @@ add_design_spec <- function(dce_design_ls = list(),
                                                                   draws_1L_int = draws_1L_int,
                                                                   seed_1L_int = seed_1L_int,
                                                                   set_idx_1L_int = set_idx_1L_int)) %>%
-                                        stats::setNames(paste0("Set_", length(dce_design_ls$choice_cards_ls) + 1)))
+                                        stats::setNames(paste0("Set_", length(dce_design_ls$pilot_analysis_ls) + 1)))
   }
   return(dce_design_ls)
 }

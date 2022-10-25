@@ -12,18 +12,6 @@ If you do not already have the required libraries to run this program installed,
 ```{r }
 # devtools::install_github("ready4-dev/ready4")
 # devtools::install_github("ready4-dev/mychoice") # add lwgeom to imports
-```
-```{r }
-# utils::install.packages("idefix")
-# utils::install.packages("kableExtra")
-# utils::install.packages("knitr")
-# utils::install.packages("magick")
-# utils::install.packages("magrittr")
-# utils::install.packages("shiny")
-# utils::install.packages("stringr")
-# utils::install.packages("webshot")
-# utils::install.packages("xfun")
-# utils::install.packages("devtools")
 # devtools::install_github("ready4-dev/ready4use")
 ```
 
@@ -52,7 +40,6 @@ reproduce_1L_lgl <- params$X$reproduce_1L_lgl
 ```
 
 ## Specify data directories
-
 We next specify where our input data can be located and where we wish to write our outputs to. You must supply these details or the rest of this code will not work. 
 
 ```{r eval=is.null(params$X)}

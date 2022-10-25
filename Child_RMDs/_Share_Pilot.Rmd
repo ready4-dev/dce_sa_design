@@ -5,12 +5,12 @@ date: '2022-06-09'
 ---
 
 
-```{r}
+```{r include=FALSE}
 # utils::install.packages("devtools")
 # devtools::install_github("ready4-dev/ready4")
 # devtools::install_github("ready4-dev/ready4use")
-library(ready4)
-library(ready4use)
+# library(ready4)
+# library(ready4use)
 ```
 
 # Share work

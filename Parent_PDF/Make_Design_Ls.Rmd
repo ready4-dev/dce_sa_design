@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       eval = params$eval_1L_lgl)
 ```
 
-```{r child="../Child_RMDs/Copyright.Rmd", eval=TRUE}
+```{r child="../Child_RMDs/_Copyright.Rmd", eval=TRUE}
 ```
 
 \blandscape
