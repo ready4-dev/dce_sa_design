@@ -1,7 +1,8 @@
-rmarkdown::render("Parent_PDF/Pilot_Design_Reproduction.RMD",
+params_ls$eval_1L_lgl <- F
+rmarkdown::render("Parent_PDF/CSDP.Rmd",
                   output_format = NULL,
-                  params = list(eval_1L_lgl = F), # Do not set to True
-                  output_file = "Pilot_Design_Reproduction.pdf",
+                  params = params_ls, # Do not set to True
+                  output_file = "CSDP.pdf",
                   output_dir = "PDFs")
 rmarkdown::render("Parent_PDF/Pilot_Design_Replication.RMD",
                   output_format = NULL,

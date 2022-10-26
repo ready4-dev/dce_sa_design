@@ -8,7 +8,7 @@ date: '2022-10-25'
 # Retrieve pilot survey design
 We retrieve details about the design of the pilot survey.
 
-```{r }
+```{r eval=params$eval_1L_lgl}
 dce_design_ls <- ingest(X,
                         fls_to_ingest_chr = ifelse(reproduce_1L_lgl,
                                                      "DDD_updated_dce_design_ls","CCC_updated_dce_design_ls"),

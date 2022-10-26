@@ -18,10 +18,10 @@ date: '2022-10-19'
 ```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(F){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/XX_Funs.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_XX_Funs_Replication.Rmd"}else{NULL}, eval=TRUE}
 ```
 
 ```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Ingest_Analysis.Rmd"}else{NULL}, eval=TRUE}
@@ -65,7 +65,6 @@ launch_survey_preview(dce_design_ls, block_1L_int = 1L)
 ```{r eval=FALSE}
 launch_survey_preview(dce_design_ls, block_1L_int = 2L)
 ```
-
 
 # Share work
 The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.

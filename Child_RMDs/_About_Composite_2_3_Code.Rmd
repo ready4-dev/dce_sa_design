@@ -1,13 +1,13 @@
 ---
-title: "About Replication Final Survey Design Code"
+title: "About Replication Pilot Analysis Code"
 output: html_document
-date: '2022-10-22'
+date: '2022-06-09'
 ---
 
 # About this code
 
 ## Motivation
-This program was used to generate the final survey choice efficient design and choice cards for a Discrete Choice Experiment study that is currently being written up. Future versions of this program will include details of the parent study.
+This sub-routine was used to analyse pilot survey responses and generate a final survey choice efficient design and choice cards for for a Discrete Choice Experiment study that is currently being written up. Future versions of this program will include details of the parent study.
 
 ## Status
 This code has been adapted from the code originally used in the study to make it easier to generalise. If you have access to the study dataset, this code will still generate an identical design to that used in our study. Future releases of this program will include synthetic data to allow those without access to the study dataset to run it from start to finish. The replication code will produce an efficient design with different choice sets to that produced in the original study.

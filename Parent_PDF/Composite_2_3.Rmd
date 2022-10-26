@@ -1,0 +1,36 @@
+---
+output: 
+  bookdown::pdf_document2:
+    includes:
+      in_header: preamble.tex
+    pandoc_args: 
+      -  "--metadata-file=../Header/header_common.yaml"
+      - '--lua-filter=../Filters/scholarly-metadata.lua'
+      - '--lua-filter=../Filters/author-info-blocks.lua'
+    toc: no
+date: "`r format(Sys.Date(),'%d %B %Y')`"
+subtitle: "Parts 2 & 3: Pilot Study Analysis And Final survey design"
+params:
+  eval_1L_lgl: !r TRUE
+  is_subroutine_lgl: !r FALSE
+  X: NULL
+---
+
+```{r child=if(T){"../Child_RMDs/_Set_Up.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(T){"../Child_RMDs/_Copyright.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(T){"../Child_RMDs/_About_Composite_2_3_Code.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(T){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(F){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(F){"../Child_RMDs/_XX_Funs_Replication.Rmd"}else{NULL}, eval=TRUE}
+```
+```{r child=if(T){"../Child_RMDs/_Replicate_Pilot_Analysis.Rmd"}else{NULL}, eval=T}
+```
+```{r child=if(T){"../Child_RMDs/_Replicate_Final_Design.Rmd"}else{NULL}, eval=T}
+```
+
+

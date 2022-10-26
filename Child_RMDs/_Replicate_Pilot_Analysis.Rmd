@@ -18,10 +18,10 @@ date: '2022-10-19'
 ```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(F){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/XX_Funs.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_XX_Funs_Replication.Rmd"}else{NULL}, eval=TRUE}
 ```
 
 ```{r echo=FALSE}
@@ -29,27 +29,26 @@ date: '2022-10-19'
 ```
 
 # Ingest data
+We ingest the responses to our pilot survey.
 
 ```{r warning=FALSE}
-pilot_ds_tb <- ready4::get_table_from_loc_file(paste0(paths_ls$input_data_dir_1L_chr,
-                                                       "/",
-                                                       paths_ls$pilot_ds_fl_nm_1L_chr),
-                                                heading_rows_1L_int = 3L,
-                                                force_numeric_1L_lgl = T)
+pilot_ds_tb <- get_table_from_loc_file(paste0(paths_ls$input_data_dir_1L_chr,
+                                              "/",
+                                              paths_ls$pilot_ds_fl_nm_1L_chr),
+                                       heading_rows_1L_int = 3L,
+                                       force_numeric_1L_lgl = T)
 ```
 
-We can also retrieve details about the design of the pilot survey
+We also retrieve details about the design of our pilot survey.
 
 ```{r}
 dce_design_ls <- ingest(X,
                         fls_to_ingest_chr = ifelse(!reproduce_1L_lgl,"CCC_pilot_dce_design_ls","DDD_pilot_dce_design_ls"),
                         metadata_1L_lgl = F)
-
 ```
 
 # Analyse data
-We can now produce the analysis of the pilot survey data. Note that the analysis algorithm involves random sampling so a seed must be set to make results reproducible. Also, for some random seeds NULL values will be generated that will prevent the analysis executing in full. Changing the random seed and rerunning the code will address this.
-
+The analysis algorithm we are going to apply involves random sampling so a seed must be set to make results reproducible. Note, some random seeds "NULL" values will be generated that will prevent the analysis executing in full. If this occurs, changing the random seed and rerunning the code will address this.
 
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,

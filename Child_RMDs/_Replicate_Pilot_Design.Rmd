@@ -18,10 +18,10 @@ date: '2022-10-19'
 ```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(F){"../Child_RMDs/_Custom_Functions_Text.Rmd"}else{NULL}, eval=TRUE}
 ```
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/XX_Funs.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_XX_Funs_Replication.Rmd"}else{NULL}, eval=TRUE}
 ```
 
 # Specify survey features and priors
