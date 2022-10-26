@@ -10,8 +10,11 @@ launch_survey_preview <- function(dce_design_ls,
                                   button_txt_1L_chr = character(0),
                                   end_txt_1L_chr = character(0),
                                   intro_text_1L_chr = character(0),
-                                  set_idx_1L_int = 1L,
+                                  set_idx_1L_int = integer(0),
                                   transform_att_nms_1L_lgl = T){
+  if(identical(set_idx_1L_int, integer(0))){
+    set_idx_1L_int <- length(dce_design_ls$choice_cards_ls)
+  }
   atts_chr <- get_atts(dce_design_ls$choice_sets_ls$att_lvls_tb, return_1L_chr = "all")
   if(transform_att_nms_1L_lgl)
     atts_chr <- atts_chr %>% stringr::str_replace_all("_"," ")
@@ -185,6 +188,7 @@ make_efnt_dsn_mat <- function(dce_design_ls,
 
 ```{r echo=FALSE}
 add_design_spec <- function(dce_design_ls = list(),
+                            add_choice_cards_1L_lgl = F,
                             add_cndt_design_mat = F,
                             alternatives_chr = character(0),
                             att_lvls_tb = tibble::tibble(),
@@ -206,6 +210,7 @@ add_design_spec <- function(dce_design_ls = list(),
                             priors_dbl = numeric(0),
                             priors_idx_1L_int = integer(0),
                             seed_1L_int = 1987,
+                            session_ls = list(),
                             set_idx_1L_int = integer(0),
                             #start_dsn_mat = NULL,
                             transform_att_nms_1L_lgl = T){
@@ -273,6 +278,20 @@ add_design_spec <- function(dce_design_ls = list(),
   if(is.null(dce_design_ls$priors_ls)){
     dce_design_ls$priors_ls <- list()
   }
+  if(is.null(dce_design_ls$session_ls)){
+    dce_design_ls$session_ls$Set_1 <- {if(identical(session_ls, list())){
+      sessionInfo()
+    }else{
+      session_ls
+    }}
+  }else{
+    if(!identical(session_ls, list())){
+       append(dce_design_ls$session_ls,
+              list(session_ls) %>%
+                stats::setNames(paste0("Set_",
+                                       length(dce_design_ls$session_ls) + 1)))
+    }
+  }
   if(!identical(priors_dbl, numeric(0))){
     dce_design_ls$priors_ls <- append(dce_design_ls$priors_ls,
                                       list(make_priors_ls(dce_design_ls,
@@ -298,12 +317,18 @@ add_design_spec <- function(dce_design_ls = list(),
                                                                start_dsn_mat_ls = start_dsn_mat_ls)) %>%
                                           stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
   }
-  if(!identical(set_idx_1L_int, integer(0))){
+  if(add_choice_cards_1L_lgl){
     dce_design_ls$choice_cards_ls <- append(dce_design_ls$choice_cards_ls,
                                             list(make_choice_cards(dce_design_ls,
                                                                    block_idxs_ls = block_idxs_ls,
                                                                    seed_1L_int = seed_1L_int,
-                                                                   set_idx_1L_int = set_idx_1L_int,
+                                                                   set_idx_1L_int = {
+                                                                     if(!identical(set_idx_1L_int, integer(0))){
+                                                                       set_idx_1L_int
+                                                                       }else{
+                                                                         length(dce_design_ls$efnt_dsn_ls)
+                                                                         }
+                                                                     },
                                                                    transform_att_nms_1L_lgl = transform_att_nms_1L_lgl)) %>%
                                               stats::setNames(paste0("Set_", length(dce_design_ls$choice_cards_ls) + 1)))
 

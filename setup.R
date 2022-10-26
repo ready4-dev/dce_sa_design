@@ -1,5 +1,3 @@
-
-
 # dir.create('~/.R')
 # file.create('~/.R/Makevars')
 # readLines('~/.R/Makevars')

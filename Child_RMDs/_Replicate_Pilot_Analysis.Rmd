@@ -41,14 +41,10 @@ pilot_ds_tb <- ready4::get_table_from_loc_file(paste0(paths_ls$input_data_dir_1L
 We can also retrieve details about the design of the pilot survey
 
 ```{r}
-Y <- ingest(X,fls_to_ingest_chr = c("CCC_pilot_dce_design_ls","DDD_pilot_dce_design_ls"))
-```
-```{r}
-if(reproduce_1L_lgl){
-  dce_design_ls <- Y@b_Ready4useIngest@objects_ls$DDD_pilot_dce_design_ls
-}else{
-  dce_design_ls <- Y@b_Ready4useIngest@objects_ls$CCC_pilot_dce_design_ls
-}
+dce_design_ls <- ingest(X,
+                        fls_to_ingest_chr = ifelse(!reproduce_1L_lgl,"CCC_pilot_dce_design_ls","DDD_pilot_dce_design_ls"),
+                        metadata_1L_lgl = F)
+
 ```
 
 # Analyse data
@@ -65,18 +61,9 @@ dce_design_ls <- add_design_spec(dce_design_ls,
                                  draws_1L_int = 100L,
                                  seed_1L_int = 1985,
                                  set_idx_1L_int = 1L)
-# Need to implement: https://stackoverflow.com/questions/69639782/installing-gfortran-on-macbook-with-apple-m1-chip-for-use-in-r
 ```
 
-# Share work
-The final step is to share our non-confidential work outputs with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.
-
-```{r eval = FALSE}
-Y <- share(X,
-           obj_to_share_xx = dce_design_ls,
-           fl_nm_1L_chr = ifelse(reproduce_1L_lgl,"DDD_pupdated_dce_design_ls","CCC_updated_dce_design_ls"),
-           description_1L_chr = paste0("DCE design specification post analysis of pilot data (output of dce_sa_design ",
-                                       ifelse(reproduce_1L_lgl,"reproduction","replication")," program)"))
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Share_Analysis.Rmd"}else{NULL}, eval=TRUE}
 ```
 
 \elandscape

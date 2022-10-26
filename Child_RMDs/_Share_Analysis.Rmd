@@ -1,0 +1,17 @@
+---
+title: "Share_Analysis"
+output: html_document
+date: '2022-10-25'
+---
+
+
+# Share work
+The final step is to share our non-confidential work outputs with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.
+
+```{r eval = FALSE}
+Y <- share(X,
+           obj_to_share_xx = dce_design_ls,
+           fl_nm_1L_chr = ifelse(reproduce_1L_lgl,"DDD_updated_dce_design_ls","CCC_updated_dce_design_ls"),
+           description_1L_chr = paste0("DCE design specification post analysis of pilot data - ",
+                                       ifelse(reproduce_1L_lgl,"reproduction","replication")," (output of dce_sa_design program)"))
+```

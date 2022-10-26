@@ -81,9 +81,8 @@ dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "S
      cost_att_idx_1L_int = 5L,
      cost_pfx_1L_chr = "$",
      cost_sfx_1L_chr = " per month",
-     # nbr_of_sets_1L_int = 30,
-     # nbr_of_blocks_1L_int = 2,
-     opt_out_idx_1L_int = 3L)  
+     opt_out_idx_1L_int = 3L,
+     session_ls = session_ls)  
 ```
 
 ## Create candidate choices matrix
@@ -112,7 +111,7 @@ We now specify our prior expectation of the values of coefficients for each attr
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,
                                  draws_1L_int = 10L,  
-                                 priors_dbl = c(-0.15, # Opt out constant
+                                 priors_dbl = c(-0.15, # Opt-out constant
                                                 0.5,1, # Outcomes
                                                 0.2,0.4, # Information sharing
                                                 0.1,0.2,0.3,0.4, # Social
@@ -140,31 +139,30 @@ We can now generate HTML choice cards for each block.
 
 ```{r warning=FALSE}
 dce_design_ls <- add_design_spec(dce_design_ls,
-                                 set_idx_1L_int = 1L,
+                                 add_choice_cards_1L_lgl = T,
                                  transform_att_nms_1L_lgl = T)
 ```
-
 
 # Preview survey
 We can now preview all of our choice cards in an interactive Shiny app.
 
 ```{r eval=FALSE}
-launch_survey_preview(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 1L)
+launch_survey_preview(dce_design_ls, block_1L_int = 1L)
 ```
 
 ```{r eval=FALSE}
-launch_survey_preview(dce_design_ls, set_idx_1L_int = 1L, block_1L_int = 2L)
+launch_survey_preview(dce_design_ls, block_1L_int = 2L)
 ```
 
 # Share work
-The final step is to share our work with others in an online repository. Note, you will need to have previously supplied yvalues for `X` that correspond to a repository for which you have write persmissions to run this part of the code successfully.
+The final step is to share our work with others in an online repository. Note, you will need to have previously supplied values for `X` that correspond to a repository for which you have write permissions to run this part of the code successfully.
 
 ```{r eval = FALSE}
 Y <- share(X,
            obj_to_share_xx = dce_design_ls,
            fl_nm_1L_chr = ifelse(reproduce_1L_lgl,"DDD_pilot_dce_design_ls","CCC_pilot_dce_design_ls"),
-           description_1L_chr = paste0("List object to help replicate pilot survey (output of dce_sa_design ",
-                                       ifelse(reproduce_1L_lgl,"reproduction","replication")," program)"))
+           description_1L_chr = paste0("Pilot survey design specification - ",
+                                       ifelse(reproduce_1L_lgl,"reproduction","replication")," (output of dce_sa_design program)"))
 ```
 
 \elandscape
