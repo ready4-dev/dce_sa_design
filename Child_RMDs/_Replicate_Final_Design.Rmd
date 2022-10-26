@@ -33,15 +33,16 @@ We now update the survey experimental design based on analysis of pilot survey r
 ```{r}
 if(reproduce_1L_lgl){
   dce_design_ls$efnt_dsn_ls <- append(dce_design_ls$efnt_dsn_ls,
-                                    list(readRDS(file = paste0(paths_ls$output_data_dir_1L_chr,"/Archive/Design_Records/no_app_optout_ls.rds"))) %>% # Replace with DV ingest
+                                    list(readRDS(file = paste0(paths_ls$output_data_dir_1L_chr,
+                                                               "/Archive/Design_Records/no_app_optout_ls.rds"))) %>% # Replace with DV ingest
                                           stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
   }else{
     dce_design_ls <- add_design_spec(dce_design_ls,  priors_idx_1L_int = 1L, set_idx_1L_int = 1)
 }
 ```
 
-# Create choice cards for each block
-We can now generate HTML choice cards for each block.
+# Create final survey HTML choice cards
+We can now generate HTML choice cards for each block of the final survey.
 
 ```{r warning=FALSE}
 dce_design_ls <- add_design_spec(dce_design_ls,
@@ -55,7 +56,7 @@ dce_design_ls <- add_design_spec(dce_design_ls,
 ```
 
 
-# Preview survey
+# Preview final survey
 We can now preview all of our choice cards in an interactive Shiny app.
 
 ```{r eval=FALSE}
@@ -67,7 +68,7 @@ launch_survey_preview(dce_design_ls, block_1L_int = 2L)
 ```
 
 # Share work
-The final step is to share our work with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.
+The final step is to share our work with others in an online repository. Note, if you don't have write permissions for `X`, you should replace `X` with an alternative `Ready4useRepos` object that provides details of a repository for which you have write permissions.
 
 ```{r eval = FALSE}
 Y <- share(X,

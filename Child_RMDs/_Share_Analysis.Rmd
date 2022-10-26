@@ -6,7 +6,7 @@ date: '2022-10-25'
 
 
 # Share work
-The final step is to share our non-confidential work outputs with others in an online repository. Note, you will need to supply your own repository details to run this part of the code successfully as you will not have write permissions to the repository `X` that we specify below.
+The final step is to share our non-confidential work outputs with others in an online repository. Note, if you don't have write permissions for `X`, you should replace `X` with an alternative `Ready4useRepos` object that provides details of a repository for which you have write permissions.
 
 ```{r eval = FALSE}
 Y <- share(X,

@@ -12,7 +12,7 @@ date: '2022-10-19'
 \blandscape
 <!---BLOCK_LANDSCAPE_START--->
 
-```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_About_Repln_Pilot_Des_Code.Rmd"}else{NULL}, eval=TRUE}
+```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_About_Repln_Des_Code.Rmd"}else{NULL}, eval=TRUE}
 ```
 
 ```{r child=if(params$is_subroutine_lgl){"../Child_RMDs/_Prepare_Workspace.Rmd"}else{NULL}, eval=TRUE}
@@ -86,7 +86,7 @@ dce_design_ls <- add_design_spec(alternatives_chr = c("Social Anxiety App A", "S
 ```
 
 ## Create candidate choices matrix
-We now create a design matrix of the full factorial of all attribute / level combinations. To do this we create a list specifying the number of attributes for each level and record whether coefficients for each attribute are Continuous ("C" ) or Dummy ("D").
+We now create a design matrix of the full factorial of all attribute / level combinations. 
 
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,
@@ -121,20 +121,20 @@ dce_design_ls <- add_design_spec(dce_design_ls,
 ```
 
 # Create efficient pilot survey design
-
 We can now create the initial efficient design to be used in the pilot survey. Note this step can take a long time (about an hour).
 
 ```{r}
 if(reproduce_1L_lgl){
   dce_design_ls$efnt_dsn_ls <- append(dce_design_ls$efnt_dsn_ls,
-                                    list(ingest(X, fls_to_ingest_chr = c("AAA_pilot_design_ls"), metadata_1L_lgl = F) %>% purrr::pluck("pilot_design_ls")) %>%
+                                    list(ingest(X, fls_to_ingest_chr = c("AAA_pilot_design_ls"), metadata_1L_lgl = F) %>% 
+                                           purrr::pluck("pilot_design_ls")) %>%
                                           stats::setNames(paste0("Set_", length(dce_design_ls$efnt_dsn_ls) + 1)))
   }else{
     dce_design_ls <- add_design_spec(dce_design_ls,  priors_idx_1L_int = 1L)
 }
 ```
 
-# Create choice cards for each block
+# Create pilot survey choice cards
 We can now generate HTML choice cards for each block.
 
 ```{r warning=FALSE}
@@ -143,7 +143,7 @@ dce_design_ls <- add_design_spec(dce_design_ls,
                                  transform_att_nms_1L_lgl = T)
 ```
 
-# Preview survey
+# Preview pilot survey
 We can now preview all of our choice cards in an interactive Shiny app.
 
 ```{r eval=FALSE}
@@ -155,7 +155,7 @@ launch_survey_preview(dce_design_ls, block_1L_int = 2L)
 ```
 
 # Share work
-The final step is to share our work with others in an online repository. Note, you will need to have previously supplied values for `X` that correspond to a repository for which you have write permissions to run this part of the code successfully.
+We can now share the design specification of our pilot survey in an online repository. Note, if you don't have write permissions for `X`, you should replace `X` with an alternative `Ready4useRepos` object that provides details of a repository for which you have write permissions.
 
 ```{r eval = FALSE}
 Y <- share(X,

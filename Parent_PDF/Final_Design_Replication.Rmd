@@ -9,7 +9,7 @@ output:
       - '--lua-filter=../Filters/author-info-blocks.lua'
     toc: no
 date: "`r format(Sys.Date(),'%d %B %Y')`"
-subtitle: "Part 3: Final survey design"
+subtitle: "Part 3: Final Survey Design"
 params:
   eval_1L_lgl: !r TRUE
   is_subroutine_lgl: !r TRUE

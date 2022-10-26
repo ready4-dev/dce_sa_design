@@ -31,7 +31,7 @@ date: '2022-10-19'
 # Ingest data
 We ingest the responses to our pilot survey.
 
-```{r warning=FALSE}
+```{r warning=FALSE, eval=params$eval_1L_lgl, message=FALSE, results='hide'}
 pilot_ds_tb <- get_table_from_loc_file(paste0(paths_ls$input_data_dir_1L_chr,
                                               "/",
                                               paths_ls$pilot_ds_fl_nm_1L_chr),
@@ -48,7 +48,7 @@ dce_design_ls <- ingest(X,
 ```
 
 # Analyse data
-The analysis algorithm we are going to apply involves random sampling so a seed must be set to make results reproducible. Note, some random seeds "NULL" values will be generated that will prevent the analysis executing in full. If this occurs, changing the random seed and rerunning the code will address this.
+The analysis algorithm we are going to apply involves random sampling so a seed must be set to make results reproducible. Note, for some random seeds "NULL" values will be generated that will prevent the analysis executing in full. If this occurs, change the random seed and rerun the code.
 
 ```{r}
 dce_design_ls <- add_design_spec(dce_design_ls,
